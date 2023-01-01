@@ -45,11 +45,14 @@ module.exports = {
         const company = req.query.company;
         const departemen = await Departement.find({
           company_id: company,
-        }).populate("company_id");
+        }).populate({ path: "company_id", select: "company_name" });
         res.status(200).json(departemen);
       }
       if (company_id) {
-        const departemen = await Departement.find({ company_id });
+        const departemen = await Departement.find({ company_id }).populate({
+          path: "company_id",
+          select: "company_name",
+        });
         res.status(200).json(departemen);
       }
     } catch (error) {
