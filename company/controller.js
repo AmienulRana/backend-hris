@@ -83,11 +83,8 @@ module.exports = {
   },
   getAllCompany: async (req, res) => {
     try {
-      console.log(req.admin);
-      if (req?.admin?.role === "Super Admin") {
-        const company = await Company.find().select("_id company_name");
-        return res.status(200).json(company);
-      }
+      const company = await Company.find().select("_id company_name");
+      return res.status(200).json(company);
     } catch (error) {
       console.log(error);
     }
