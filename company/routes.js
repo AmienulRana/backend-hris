@@ -9,5 +9,5 @@ const router = express.Router();
 
 router.post("/registrasi", registerCompany);
 router.post("/login", loginCompany);
-router.get("/all", authenticationToken, getAllCompany);
+router.get("/all", getAllCompany);
 module.exports = router;
