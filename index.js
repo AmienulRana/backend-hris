@@ -7,6 +7,7 @@ const companyRoute = require("./company/routes");
 const adminRoute = require("./admin/routes");
 const departementRoute = require("./departement/routes");
 const designationRoute = require("./designations/routes");
+const employmentRoute = require("./employee/routes");
 const path = require("path");
 const router = express.Router();
 
@@ -25,6 +26,7 @@ app.use(`/${api_version}/admin`, adminRoute);
 app.use(`/${api_version}/company`, companyRoute);
 app.use(`/${api_version}/departement`, departementRoute);
 app.use(`/${api_version}/designation`, designationRoute);
+app.use(`/${api_version}/employment`, employmentRoute);
 
 app.listen(process.env.PORT, () => {
   console.log(`Server start running on port ${process.env.PORT}`);
