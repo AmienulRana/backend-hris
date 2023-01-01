@@ -38,11 +38,14 @@ module.exports = {
         const company_id = req.query.company;
         const designation = await Designation.find({
           company_id,
-        }).populate("company_id");
+        }).populate({ path: "company_id", select: "company_name" });
         res.status(200).json(designation);
       }
       if (company_id) {
-        const designation = await Designation.find({ company_id });
+        const designation = await Designation.find({ company_id }).populate({
+          path: "company_id",
+          select: "company_name",
+        });
         res.status(200).json(designation);
       }
     } catch (error) {
