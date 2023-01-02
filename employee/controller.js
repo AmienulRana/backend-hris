@@ -27,63 +27,35 @@ module.exports = {
         attadence,
         basic_sallary,
       } = req.body;
-      if (role === "Super Admin") {
-        const newEmployment = new Employment({
-          company_id: req.query.company,
-          emp_profile,
-          username,
-          password,
-          email,
-          emp_firstname,
-          emp_lastname,
-          emp_fullname: `${emp_firstname} ${emp_lastname}`,
-          emp_nikktp,
-          emp_phone,
-          emp_gender,
-          emp_marital_status,
-          emp_birthday,
-          emp_blood,
-          emp_nik_karyawan,
-          emp_depid,
-          emp_desid,
-          emp_status,
-          emp_fsuperior,
-          emp_ssuperior,
-          emp_location,
-          emp_attadance: attadence,
-        });
-        await newEmployment.save();
-        res
-          .status(200)
-          .json({ message: "Successfully created a new Employment" });
-      } else if (role === "App Admin") {
-        const newEmployment = new Employment({
-          company_id: req.admin.company_id,
-          emp_profile,
-          username,
-          password,
-          email,
-          emp_firstname,
-          emp_lastname,
-          emp_fullname: `${emp_firstname} ${emp_lastname}`,
-          emp_nikktp,
-          emp_phone,
-          emp_gender,
-          emp_marital_status,
-          emp_birthday,
-          emp_blood,
-          emp_nik_karyawan,
-          emp_depid,
-          emp_desid,
-          emp_status,
-          emp_fsuperior,
-          emp_ssuperior,
-          emp_location,
-          emp_attadance: attadence,
-        });
-        await newEmployment.save();
-        res.json({ message: "Successfully created a new Employment" });
-      }
+      const newEmployment = new Employment({
+        company_id:
+          role === "Super Admin"
+            ? req.query.company
+            : role === "App Admin" && req.admin.company_id,
+        emp_profile,
+        username,
+        password,
+        email,
+        emp_firstname,
+        emp_lastname,
+        emp_fullname: `${emp_firstname} ${emp_lastname}`,
+        emp_nikktp,
+        emp_phone,
+        emp_gender,
+        emp_marital_status,
+        emp_birthday,
+        emp_blood,
+        emp_nik_karyawan,
+        emp_depid,
+        emp_desid,
+        emp_status,
+        emp_fsuperior,
+        emp_ssuperior,
+        emp_location,
+        emp_attadance: attadence,
+      });
+      await newEmployment.save();
+      res.json({ message: "Successfully created a new Employment" });
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Failed to Add new Employment" });
