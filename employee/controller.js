@@ -73,7 +73,9 @@ module.exports = {
           const employment = await Employment.find({
             company_id,
           })
-            .select("company_id emp_fullname emp_desid emp_depid emp_status ")
+            .select(
+              "company_id emp_fullname emp_desid emp_depid emp_status emp_profile"
+            )
             .populate({ path: "company_id", select: "company_name" })
             .populate({ path: "emp_depid", select: "dep_name dep_workshift" })
             .populate({ path: "emp_desid", select: "des_name" });
