@@ -1,11 +1,11 @@
 const Employment = require("./model");
+const fs = require("fs");
 
 module.exports = {
   addEmployement: async (req, res) => {
     try {
       const { role } = req.admin;
       const {
-        emp_profile,
         username,
         password,
         emp_firstname,
@@ -24,7 +24,7 @@ module.exports = {
         emp_fsuperior,
         emp_ssuperior,
         emp_location,
-        attadence,
+        attadance,
         basic_sallary,
       } = req.body;
       const newEmployment = new Employment({
@@ -32,7 +32,7 @@ module.exports = {
           role === "Super Admin"
             ? req.query.company
             : role === "App Admin" && req.admin.company_id,
-        emp_profile,
+        emp_profile: req.file ? req.file?.filename : null,
         username,
         password,
         email,
@@ -52,13 +52,16 @@ module.exports = {
         emp_fsuperior,
         emp_ssuperior,
         emp_location,
-        emp_attadance: attadence,
+        emp_attadance: JSON.parse(attadance),
       });
       await newEmployment.save();
-      res.json({ message: "Successfully created a new Employment" });
+      return res.json({ message: "Successfully created a new Employment" });
     } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "Failed to Add new Employment" });
+      if (req?.file) {
+        console.log(error);
+        fs.unlinkSync(`public/uploads/${req.file.filename}`);
+      }
+      return res.status(500).json({ message: "Failed to Add new Employment" });
     }
   },
   getEmployment: async (req, res) => {
