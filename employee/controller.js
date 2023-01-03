@@ -57,6 +57,7 @@ module.exports = {
       await newEmployment.save();
       return res.json({ message: "Successfully created a new Employment" });
     } catch (error) {
+      console.log(error);
       if (req?.file) {
         console.log(error);
         fs.unlinkSync(`public/uploads/${req.file.filename}`);
@@ -91,6 +92,21 @@ module.exports = {
           .populate({ path: "emp_desid", select: "des_name" });
         return res.status(200).json(employment);
       }
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Failed to Get Designation" });
+    }
+  },
+  detailEmployment: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const employment = await Employment.findOne({
+        _id: id,
+      })
+        .populate({ path: "company_id", select: "company_name" })
+        .populate({ path: "emp_depid", select: "dep_name dep_workshift" })
+        .populate({ path: "emp_desid", select: "des_name" });
+      return res.status(200).json(employment);
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Failed to Get Designation" });

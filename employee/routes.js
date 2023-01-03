@@ -1,6 +1,10 @@
 const express = require("express");
 const { authenticationToken } = require("../middleware/authentication");
-const { addEmployement, getEmployment } = require("./controller");
+const {
+  addEmployement,
+  getEmployment,
+  detailEmployment,
+} = require("./controller");
 const router = express.Router();
 const path = require("path");
 const multer = require("multer");
@@ -42,4 +46,5 @@ const upload = multer({
 
 router.post("/", authenticationToken, upload.single("profile"), addEmployement);
 router.get("/", authenticationToken, getEmployment);
+router.get("/:id", authenticationToken, detailEmployment);
 module.exports = router;
