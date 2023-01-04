@@ -10,6 +10,7 @@ const departementRoute = require("./departement/routes");
 const designationRoute = require("./designations/routes");
 const employmentRoute = require("./employee/routes");
 const EducationRoute = require("./education/routes");
+const ExperienceRoute = require("./experience/routes");
 const path = require("path");
 const router = express.Router();
 
@@ -29,6 +30,7 @@ app.use(`/${api_version}/departement`, departementRoute);
 app.use(`/${api_version}/designation`, designationRoute);
 app.use(`/${api_version}/employment`, employmentRoute);
 app.use(`/${api_version}/education`, EducationRoute);
+app.use(`/${api_version}/experience`, ExperienceRoute);
 
 app.listen(process.env.PORT, () => {
   console.log(`Server start running on port ${process.env.PORT}`);
