@@ -33,71 +33,73 @@ module.exports = {
       res.status(500).json({ message: "Failed to Add new Education" });
     }
   },
-  editDepartement: async (req, res) => {
+  editEducation: async (req, res) => {
     try {
-      const { dep_name, dep_manager, dep_desc, dep_location, dep_workshift } =
+      const { empedu_type, empedu_institute, empedu_result, empedu_year } =
         req.body;
+      const { role } = req.admin;
       const { id } = req.params;
-      const { role } = req?.admin;
-      console.log(role);
       if (role === "Super Admin" || role === "App Admin") {
-        const departement = await Departement.updateOne(
+        const updateEducation = await Education.updateOne(
           { _id: id },
           {
             $set: {
-              dep_name,
-              dep_manager,
-              dep_desc,
-              dep_location,
-              dep_workshift,
+              empedu_type,
+              empedu_result,
+              empedu_year,
+              empedu_institute,
             },
           }
         );
         return res
           .status(200)
-          .json({ message: "Successfully edited Departement" });
+          .json({ message: "Successfully updated Education" });
       } else {
         return res
           .status(422)
-          .json({ message: "You can't change departments" });
+          .json({ message: "You can't add Education to this employment" });
       }
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Failed to edited departement" });
     }
   },
-  getDepartement: async (req, res) => {
+  getEducation: async (req, res) => {
     try {
-      const company_id = req?.admin?.company_id;
-      if (req.admin.role === "Super Admin") {
-        const company = req.query.company;
-        const departemen = await Departement.find({
-          company_id: company,
-        }).populate({ path: "company_id", select: "company_name" });
-        res.status(200).json(departemen);
-      }
-      if (company_id) {
-        const departemen = await Departement.find({ company_id }).populate({
-          path: "company_id",
-          select: "company_name",
+      const emp_id = req?.query?.emp_id;
+      const { role } = req.admin;
+      if (role === "Super Admin" || role === "App Admin") {
+        const departemen = await Education.find({
+          emp_id,
         });
         res.status(200).json(departemen);
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: "Failed to Get Departement" });
+      res.status(500).json({ message: "Failed to Get Education" });
     }
   },
-  detailDepartement: async (req, res) => {
+  deleteEducation: async (req, res) => {
     try {
-      const { id } = req?.params;
-      const departemen = await Departement.findOne({
-        _id: id,
-      });
-      res.status(200).json(departemen);
+      const { role } = req.admin;
+      const { id } = req.params;
+      if (role === "Super Admin" || role === "App Admin") {
+        const education = await Education.deleteOne({ _id: id });
+        if (education.deletedCount > 0) {
+          return res
+            .status(200)
+            .json({ message: "Successfully deleted Education" });
+        }
+      } else {
+        return res
+          .status(422)
+          .json({ message: "You can't delete Education this employment" });
+      }
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: "Failed to Get Departement" });
+      res
+        .status(500)
+        .json({ message: "Failed to deleted education | Server Error" });
     }
   },
 };
