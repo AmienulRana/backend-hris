@@ -1,5 +1,6 @@
 const Employment = require("./model");
 const fs = require("fs");
+const Salary = require("../salary/model");
 
 module.exports = {
   addEmployement: async (req, res) => {
@@ -25,8 +26,9 @@ module.exports = {
         emp_ssuperior,
         emp_location,
         attadance,
-        basic_sallary,
+        basic_salary,
       } = req.body;
+      const parsingtoJson = JSON.parse(basic_salary);
       const newEmployment = new Employment({
         company_id:
           role === "Super Admin"
@@ -54,8 +56,14 @@ module.exports = {
         emp_location,
         emp_attadance: JSON.parse(attadance),
       });
-      await newEmployment.save();
+      await newEmployment.save().then(async (emp) => {
+        if (basic_salary) {
+          const salary = new Salary({ ...parsingtoJson, emp_id: emp._id });
+          await salary.save();
+        }
+      });
       return res.json({ message: "Successfully created a new Employment" });
+      // return res.status(500).json({ message: "Failed to Add new Employment" });
     } catch (error) {
       console.log(error);
       if (req?.file) {
