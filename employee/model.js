@@ -62,6 +62,9 @@ const EmployementSchema = new Schema({
   emp_ssuperior: {
     type: String,
   },
+  emp_tanggungan: {
+    type: String,
+  },
   emp_status: {
     type: String,
     enum: ["Permanent", "Probation", "Designation"],
@@ -70,6 +73,9 @@ const EmployementSchema = new Schema({
     type: String,
   },
   emp_location: {
+    type: String,
+  },
+  emp_joining_data: {
     type: String,
   },
   emp_attadance: {
