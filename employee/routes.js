@@ -4,6 +4,7 @@ const {
   addEmployement,
   getEmployment,
   detailEmployment,
+  editPesonalDetail,
 } = require("./controller");
 const router = express.Router();
 const path = require("path");
@@ -47,4 +48,5 @@ const upload = multer({
 router.post("/", authenticationToken, upload.single("profile"), addEmployement);
 router.get("/", authenticationToken, getEmployment);
 router.get("/:id", authenticationToken, detailEmployment);
+router.put("/personal-detail/:id", authenticationToken, editPesonalDetail);
 module.exports = router;
