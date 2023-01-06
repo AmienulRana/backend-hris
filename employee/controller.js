@@ -120,4 +120,169 @@ module.exports = {
       res.status(500).json({ message: "Failed to Get Designation" });
     }
   },
+  editPesonalDetail: async (req, res) => {
+    try {
+      const { role } = req.admin;
+      const {
+        emp_firstname,
+        emp_lastname,
+        emp_nikktp,
+        email,
+        emp_phone,
+        emp_gender,
+        emp_marital_status,
+        emp_birthday,
+        emp_blood,
+      } = req.body;
+      const { id } = req.params;
+      const findEmployment = await Employment.findOne({ _id: id });
+      // cek duplicate jika employment memperbarui email
+      if (email !== findEmployment?.email) {
+        const findDuplicateEmail = await Employment.findOne({ email });
+        if (!findDuplicateEmail) {
+          const newEmployment = await Employment.updateOne(
+            { _id: id },
+            {
+              $set: {
+                emp_profile: req.file
+                  ? req.file?.filename
+                  : findEmployment.emp_profile,
+                email,
+                emp_firstname,
+                emp_lastname,
+                emp_fullname: `${emp_firstname} ${emp_lastname}`,
+                emp_nikktp,
+                emp_phone,
+                emp_gender,
+                emp_marital_status,
+                emp_birthday,
+                emp_blood,
+              },
+            }
+          );
+          if (newEmployment.modifiedCount > 0) {
+            return res.json({
+              message: "Successfully updated this Employment",
+            });
+          } else {
+            return res.json({ message: "No data changed" });
+          }
+        } else {
+          return res
+            .status(422)
+            .json({ message: "Failed to update, Your email has been used" });
+        }
+      } else {
+        const newEmployment = await Employment.updateOne(
+          { _id: id },
+          {
+            $set: {
+              emp_profile: req.file
+                ? req.file?.filename
+                : findEmployment.emp_profile,
+              email,
+              emp_firstname,
+              emp_lastname,
+              emp_fullname: `${emp_firstname} ${emp_lastname}`,
+              emp_nikktp,
+              emp_phone,
+              emp_gender,
+              emp_marital_status,
+              emp_birthday,
+              emp_blood,
+            },
+          }
+        );
+        if (newEmployment.modifiedCount > 0) {
+          return res.json({ message: "Successfully updated Employment" });
+        } else {
+          return res.json({ message: "No data changed" });
+        }
+      }
+      // return res.status(500).json({ message: "Failed to Add new Employment" });
+    } catch (error) {
+      console.log(error);
+      if (req?.file) {
+        console.log(error);
+        fs.unlinkSync(`public/uploads/${req.file.filename}`);
+      }
+      return res.status(500).json({ message: "Failed to Update Employment" });
+    }
+  },
+  editEmploymentDetail: async (req, res) => {
+    try {
+      const { role } = req.admin;
+      const {
+        username,
+        emp_nik_karyawan,
+        emp_depid,
+        emp_desid,
+        emp_status,
+        emp_tanggungan,
+        emp_fsuperior,
+        emp_ssuperior,
+        emp_location,
+      } = req.body;
+      const { id } = req.params;
+      const findEmployment = await Employment.findOne({ _id: id });
+      // cek duplicate jika employment memperbarui email
+      if (username !== findEmployment?.username) {
+        const findDuplicateUsername = await Employment.findOne({ username });
+        if (!findDuplicateUsername) {
+          const newEmployment = await Employment.updateOne(
+            { _id: id },
+            {
+              $set: {
+                username,
+                emp_nik_karyawan,
+                emp_depid,
+                emp_desid,
+                emp_status,
+                emp_tanggungan,
+                emp_fsuperior,
+                emp_ssuperior,
+                emp_location,
+              },
+            }
+          );
+          if (newEmployment.modifiedCount > 0) {
+            return res.json({
+              message: "Successfully updated this Employment",
+            });
+          } else {
+            return res.json({ message: "No data changed" });
+          }
+        } else {
+          return res
+            .status(422)
+            .json({ message: "Failed to update, Your username has been used" });
+        }
+      } else {
+        const newEmployment = await Employment.updateOne(
+          { _id: id },
+          {
+            $set: {
+              username,
+              emp_nik_karyawan,
+              emp_depid,
+              emp_desid,
+              emp_status,
+              emp_tanggungan,
+              emp_fsuperior,
+              emp_ssuperior,
+              emp_location,
+            },
+          }
+        );
+        if (newEmployment.modifiedCount > 0) {
+          return res.json({ message: "Successfully updated Employment" });
+        } else {
+          return res.json({ message: "No data changed" });
+        }
+      }
+      // return res.status(500).json({ message: "Failed to Add new Employment" });
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to Update Employment" });
+    }
+  },
 };

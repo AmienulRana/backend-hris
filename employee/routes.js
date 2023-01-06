@@ -5,6 +5,7 @@ const {
   getEmployment,
   detailEmployment,
   editPesonalDetail,
+  editEmploymentDetail,
 } = require("./controller");
 const router = express.Router();
 const path = require("path");
@@ -49,4 +50,5 @@ router.post("/", authenticationToken, upload.single("profile"), addEmployement);
 router.get("/", authenticationToken, getEmployment);
 router.get("/:id", authenticationToken, detailEmployment);
 router.put("/personal-detail/:id", authenticationToken, editPesonalDetail);
+router.put("/employment-detail/:id", authenticationToken, editEmploymentDetail);
 module.exports = router;
