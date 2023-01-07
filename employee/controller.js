@@ -305,4 +305,34 @@ module.exports = {
       return res.status(500).json({ message: "Failed to Update Employment" });
     }
   },
+  editWorkShift: async (req, res) => {
+    try {
+      const { role } = req.admin;
+      const { id } = req.params;
+      if (role === "Super Admin" || "App Admin") {
+        const newEmployment = await Employment.updateOne(
+          { _id: id },
+          {
+            $set: {
+              emp_attadance: {
+                ...req.body,
+              },
+            },
+          }
+        );
+        if (newEmployment.modifiedCount > 0) {
+          return res.json({
+            message: "Successfully updated shift this Employment",
+          });
+        } else {
+          return res.json({ message: "No data changed" });
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      return res
+        .status(500)
+        .json({ message: "Failed to Update Shift Employment" });
+    }
+  },
 };
