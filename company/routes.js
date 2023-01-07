@@ -11,5 +11,5 @@ const router = express.Router();
 router.post("/registrasi", registerCompany);
 router.post("/login", loginCompany);
 router.get("/all", getAllCompany);
-router.get("/dashboard", dahsboard);
+router.get("/dashboard", authenticationToken, dahsboard);
 module.exports = router;

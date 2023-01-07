@@ -1,10 +1,29 @@
 const Company = require("./model.js");
 const bcrypt = require("bcrypt");
 const generate_token = require("../utils/generateToken");
+const Employment = require("../employee/model");
+const Departement = require("../departement/model");
 
 const validator = (value) => {
   return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/.test(value);
 };
+
+async function TotalStatusEmplyoment() {
+  const employment = await Employment.find();
+  const status = ["Permanent", "Probation", "Contract"];
+
+  const result = [];
+  for (let i = 0; i < status.length; i++) {
+    let total = 0;
+    for (let j = 0; j < employment.length; j++) {
+      if (employment[j].emp_status === status[i]) {
+        total += 1;
+      }
+    }
+    result.push({ status: status[i], total_employment: total });
+  }
+  return result;
+}
 
 module.exports = {
   registerCompany: async (req, res) => {
@@ -85,6 +104,25 @@ module.exports = {
     try {
       const company = await Company.find().select("_id company_name");
       return res.status(200).json(company);
+    } catch (error) {
+      console.log(error);
+    }
+  },
+  dahsboard: async (req, res) => {
+    try {
+      const { role } = req.admin;
+      const company_id =
+        role === "Super Admin"
+          ? req.query.company
+          : role === "App Admin" && req.admin.company_id;
+      const employment = (await Employment.find({ company_id })).length;
+      const departement = (await Departement.find({ company_id })).length;
+      const statistic_employment = await TotalStatusEmplyoment();
+      return res.status(200).json({
+        total_employment: employment,
+        total_departement: departement,
+        employment_status: statistic_employment,
+      });
     } catch (error) {
       console.log(error);
     }
