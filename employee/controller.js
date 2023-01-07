@@ -33,25 +33,19 @@ module.exports = {
       const checkDuplicateNIKKtp = await Employment.findOne({ emp_nikktp });
       const checkDuplicateUsername = await Employment.findOne({ username });
       if (checkDuplicateEmail) {
-        return res
-          .status(422)
-          .json({
-            message: `${email} has been used, please select another email`,
-          });
+        return res.status(422).json({
+          message: `${email} has been used, please select another email`,
+        });
       }
       if (checkDuplicateNIKKtp) {
-        return res
-          .status(422)
-          .json({
-            message: `NIK KTP should not be duplicate, please enter another NIK KTP`,
-          });
+        return res.status(422).json({
+          message: `NIK KTP should not be duplicate, please enter another NIK KTP`,
+        });
       }
       if (checkDuplicateUsername) {
-        return res
-          .status(422)
-          .json({
-            message: `${username} has been used, please select another username`,
-          });
+        return res.status(422).json({
+          message: `${username} has been used, please select another username`,
+        });
       }
 
       const newEmployment = new Employment({
@@ -82,7 +76,7 @@ module.exports = {
         emp_attadance: JSON.parse(attadance),
       });
       await newEmployment.save().then(async (emp) => {
-        if (basic_salary) {
+        if (basic_salary.emp_salary && basic_salary.emp_periode) {
           const salary = new Salary({ ...parsingtoJson, emp_id: emp._id });
           await salary.save();
         }
@@ -90,8 +84,8 @@ module.exports = {
       return res.json({ message: "Successfully created a new Employment" });
       // return res.status(500).json({ message: "Failed to Add new Employment" });
     } catch (error) {
+      console.log(error);
       if (req?.file) {
-        console.log(error);
         fs.unlinkSync(`public/uploads/${req.file.filename}`);
       }
       return res.status(500).json({
