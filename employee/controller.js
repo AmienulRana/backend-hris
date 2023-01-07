@@ -29,6 +29,31 @@ module.exports = {
         basic_salary,
       } = req.body;
       const parsingtoJson = JSON.parse(basic_salary);
+      const checkDuplicateEmail = await Employment.findOne({ email });
+      const checkDuplicateNIKKtp = await Employment.findOne({ emp_nikktp });
+      const checkDuplicateUsername = await Employment.findOne({ username });
+      if (checkDuplicateEmail) {
+        return res
+          .status(422)
+          .json({
+            message: `${email} has been used, please select another email`,
+          });
+      }
+      if (checkDuplicateNIKKtp) {
+        return res
+          .status(422)
+          .json({
+            message: `NIK KTP should not be duplicate, please enter another NIK KTP`,
+          });
+      }
+      if (checkDuplicateUsername) {
+        return res
+          .status(422)
+          .json({
+            message: `${username} has been used, please select another username`,
+          });
+      }
+
       const newEmployment = new Employment({
         company_id:
           role === "Super Admin"
@@ -65,12 +90,13 @@ module.exports = {
       return res.json({ message: "Successfully created a new Employment" });
       // return res.status(500).json({ message: "Failed to Add new Employment" });
     } catch (error) {
-      console.log(error);
       if (req?.file) {
         console.log(error);
         fs.unlinkSync(`public/uploads/${req.file.filename}`);
       }
-      return res.status(500).json({ message: "Failed to Add new Employment" });
+      return res.status(500).json({
+        message: "Failed to Add new Employment | Internal Server Error",
+      });
     }
   },
   getEmployment: async (req, res) => {
