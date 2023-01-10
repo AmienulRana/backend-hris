@@ -6,20 +6,20 @@ module.exports = {
   addDeduction: async (req, res) => {
     try {
       const {
-        empallow_allowance_id,
-        empallow_allowance_amount,
-        empallow_allowance_status,
+        deduction_id,
+        deduction_selfpercent,
+        deduction_companypercent,
         emp_id,
-        empallow_allowance_type,
       } = req.body;
       const { role } = req.admin;
       if (role === "Super Admin" || role === "App Admin") {
         const deduction = new Deduction({
           emp_id,
-          empallow_allowance_id,
-          empallow_allowance_amount,
-          empallow_allowance_status,
-          empallow_allowance_type,
+          deduction_id,
+          deduction_selfpercent,
+          deduction_totalpercent:
+            Number(deduction_selfpercent) + Number(deduction_companypercent),
+          deduction_companypercent,
         });
         await deduction.save();
         return res
@@ -28,16 +28,15 @@ module.exports = {
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: `Failed to Add new deduction` });
+      res.status(500).json({
+        message: `Failed to Add new deduction | Internal Server Error`,
+      });
     }
   },
   editDeduction: async (req, res) => {
     try {
-      const {
-        empallow_allowance_id,
-        empallow_allowance_amount,
-        empallow_allowance_type,
-      } = req.body;
+      const { deduction_id, deduction_selfpercent, deduction_companypercent } =
+        req.body;
       const { role } = req.admin;
       const { id } = req.params;
       if (role === "Super Admin" || role === "App Admin") {
@@ -45,9 +44,12 @@ module.exports = {
           { _id: id },
           {
             $set: {
-              empallow_allowance_id,
-              empallow_allowance_amount,
-              empallow_allowance_type,
+              deduction_id,
+              deduction_selfpercent,
+              deduction_totalpercent:
+                Number(deduction_selfpercent) +
+                Number(deduction_companypercent),
+              deduction_companypercent,
             },
           }
         );
@@ -83,11 +85,12 @@ module.exports = {
       const deduction = await Deduction.find({
         emp_id,
       }).populate({
-        path: "empdeduct_deduction_id",
+        path: "deduction_id",
         select: "ad_name _id",
       });
       res.status(200).json(deduction);
     } catch (error) {
+      console.log(error);
       res.status(500).json({ message: "Internal Server Error" });
     }
   },
