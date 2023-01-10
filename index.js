@@ -13,6 +13,7 @@ const EducationRoute = require("./education/routes");
 const ExperienceRoute = require("./experience/routes");
 const BankRoute = require("./bank/routes");
 const SalaryRoute = require("./salary/routes");
+const AllowDeductRoute = require("./allow-deduction/routes");
 const path = require("path");
 const router = express.Router();
 
@@ -35,6 +36,7 @@ app.use(`/${api_version}/education`, EducationRoute);
 app.use(`/${api_version}/experience`, ExperienceRoute);
 app.use(`/${api_version}/bank`, BankRoute);
 app.use(`/${api_version}/salary`, SalaryRoute);
+app.use(`/${api_version}/allowance-deduction`, AllowDeductRoute);
 
 app.listen(process.env.PORT, () => {
   console.log(`Server start running on port ${process.env.PORT}`);
