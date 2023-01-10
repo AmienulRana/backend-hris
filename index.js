@@ -23,10 +23,10 @@ app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "https://avapps.vercel.app");
     res.header(
       "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept"
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization"
     );
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-    return res.status(200).json({});
+    next();
   }
   next();
 });
@@ -35,7 +35,7 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "https://avapps.vercel.app");
   res.header(
     "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
   );
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
   next();
