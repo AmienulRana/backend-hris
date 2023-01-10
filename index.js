@@ -1,7 +1,6 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-app.use(cors());
 require("dotenv").config();
 require("./database");
 const companyRoute = require("./company/routes");
@@ -14,8 +13,20 @@ const ExperienceRoute = require("./experience/routes");
 const BankRoute = require("./bank/routes");
 const SalaryRoute = require("./salary/routes");
 const AllowDeductRoute = require("./allow-deduction/routes");
+const AllowanceEmployment = require("./emp-allowance/routes");
+const DeductionEmployment = require("./emp-deduction/routes");
 const path = require("path");
 const router = express.Router();
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
+// app.use(cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -37,6 +48,8 @@ app.use(`/${api_version}/experience`, ExperienceRoute);
 app.use(`/${api_version}/bank`, BankRoute);
 app.use(`/${api_version}/salary`, SalaryRoute);
 app.use(`/${api_version}/allowance-deduction`, AllowDeductRoute);
+app.use(`/${api_version}/allowance`, AllowanceEmployment);
+app.use(`/${api_version}/deduction`, DeductionEmployment);
 
 app.listen(process.env.PORT, () => {
   console.log(`Server start running on port ${process.env.PORT}`);
