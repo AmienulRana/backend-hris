@@ -6,18 +6,22 @@ const AllowSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Employmeent",
   },
-  empallow_allowance_id: {
+  deduction_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "allowdeduct",
   },
-  empallow_allowance_amount: {
+  deduction_selfpercent: {
     type: String,
   },
-  empallow_allowance_status: {
+  deduction_status: {
     type: Boolean,
     default: false,
   },
-  empallow_allowance_type: {
+  deduction_totalpercent: {
+    type: Boolean,
+    default: false,
+  },
+  deduction_companypercent: {
     type: String,
   },
 });
