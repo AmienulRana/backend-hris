@@ -11,18 +11,17 @@ const AllowSchema = new Schema({
     ref: "allowdeduct",
   },
   deduction_selfpercent: {
-    type: String,
+    type: Number,
   },
   deduction_status: {
     type: Boolean,
     default: false,
   },
   deduction_totalpercent: {
-    type: Boolean,
-    default: false,
+    type: Number,
   },
   deduction_companypercent: {
-    type: String,
+    type: Number,
   },
 });
 
