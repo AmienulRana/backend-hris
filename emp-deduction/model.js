@@ -9,9 +9,11 @@ const AllowSchema = new Schema({
   deduction_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "allowdeduct",
+    required: true,
   },
   deduction_selfpercent: {
     type: Number,
+    required: true,
   },
   deduction_status: {
     type: Boolean,
@@ -19,9 +21,11 @@ const AllowSchema = new Schema({
   },
   deduction_totalpercent: {
     type: Number,
+    required: true,
   },
   deduction_companypercent: {
     type: Number,
+    required: true,
   },
 });
 
