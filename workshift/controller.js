@@ -9,7 +9,6 @@ module.exports = {
         shift_clockout,
         shift_late_tolarance,
         shift_verylate_tolarance,
-        shift_status,
         shift_break_duration,
       } = req.body;
       console.log(req.body);
@@ -32,6 +31,22 @@ module.exports = {
       }
     } catch (error) {
       console.log(error);
+      res.status(500).json({ message: "Failed to add shift | server error" });
+    }
+  },
+  getShift: async (req, res) => {
+    try {
+      const { role } = req.admin;
+      if (role === "Super Admin" || "Role" === "App Admin") {
+        const shift = await Shift.find({
+          company_id:
+            role === "Super Admin"
+              ? req.query.company_id
+              : req.admin.company_id,
+        });
+        res.status(200).json(shift);
+      }
+    } catch (error) {
       res.status(500).json({ message: "Failed to add shift | server error" });
     }
   },
