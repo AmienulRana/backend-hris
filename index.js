@@ -12,6 +12,7 @@ const EducationRoute = require("./education/routes");
 const ExperienceRoute = require("./experience/routes");
 const BankRoute = require("./bank/routes");
 const SalaryRoute = require("./salary/routes");
+const ShiftRoute = require("./workshift/routes");
 const AllowDeductRoute = require("./allow-deduction/routes");
 const AllowanceEmployment = require("./emp-allowance/routes");
 const DeductionEmployment = require("./emp-deduction/routes");
@@ -52,6 +53,7 @@ app.use(`/${api_version}/salary`, SalaryRoute);
 app.use(`/${api_version}/allowance-deduction`, AllowDeductRoute);
 app.use(`/${api_version}/allowance`, AllowanceEmployment);
 app.use(`/${api_version}/deduction`, DeductionEmployment);
+app.use(`/${api_version}/shift`, ShiftRoute);
 
 app.listen(process.env.PORT, () => {
   console.log(`Server start running on port ${process.env.PORT}`);
