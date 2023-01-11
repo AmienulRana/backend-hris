@@ -35,6 +35,9 @@ const ShiftSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  shift_desc: {
+    type: String,
+  },
 });
 
 module.exports = mongoose.model("shift", ShiftSchema);

@@ -24,6 +24,11 @@ module.exports = {
           shift_late_tolarance,
           shift_verylate_tolarance,
           shift_break_duration,
+          shift_desc: `${shift_name} (${shift_clockin}-${shift_clockout}, ${
+            shift_break_duration < 10
+              ? `0${shift_break_duration}:00 Hour`
+              : `${shift_break_duration}:00 Hour`
+          })`,
         });
         await shift.save();
         res.status(200).json({ message: "Succesfuly added new shift" });
