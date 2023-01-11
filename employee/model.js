@@ -80,31 +80,31 @@ const EmployementSchema = new Schema({
   },
   emp_attadance: {
     senin: {
-      shift: { type: String },
+      shift: { type: mongoose.Schema.Types.ObjectId, ref: "shift" },
       off_day: { type: Boolean },
     },
     selasa: {
-      shift: { type: String },
+      shift: { type: mongoose.Schema.Types.ObjectId, ref: "shift" },
       off_day: { type: Boolean },
     },
     rabu: {
-      shift: { type: String },
+      shift: { type: mongoose.Schema.Types.ObjectId, ref: "shift" },
       off_day: { type: Boolean },
     },
     kamis: {
-      shift: { type: String },
+      shift: { type: mongoose.Schema.Types.ObjectId, ref: "shift" },
       off_day: { type: Boolean },
     },
     jumat: {
-      shift: { type: String },
+      shift: { type: mongoose.Schema.Types.ObjectId, ref: "shift" },
       off_day: { type: Boolean },
     },
     sabtu: {
-      shift: { type: String },
+      shift: { type: mongoose.Schema.Types.ObjectId, ref: "shift" },
       off_day: { type: Boolean },
     },
     minggu: {
-      shift: { type: String },
+      shift: { type: mongoose.Schema.Types.ObjectId, ref: "shift" },
       off_day: { type: Boolean },
     },
   },
