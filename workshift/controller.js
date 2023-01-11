@@ -11,7 +11,6 @@ module.exports = {
         shift_verylate_tolarance,
         shift_break_duration,
       } = req.body;
-      console.log(req.body);
       const { role } = req.admin;
       if (role === "Super Admin" || "Role" === "App Admin") {
         const shift = new Shift({
@@ -43,11 +42,36 @@ module.exports = {
             role === "Super Admin"
               ? req.query.company_id
               : req.admin.company_id,
-        });
+        }).populate("company_id");
         res.status(200).json(shift);
       }
     } catch (error) {
       res.status(500).json({ message: "Failed to add shift | server error" });
+    }
+  },
+  changeStatusShift: async (req, res) => {
+    try {
+      const { role } = req.admin;
+      const { id } = req.params;
+      if (role === "Super Admin" || role === "App Admin") {
+        const findShift = await Shift.findOne({ _id: id });
+        const shift = await Shift.updateOne(
+          { _id: id },
+          {
+            $set: {
+              shift_status: findShift?.shift_status ? false : true,
+            },
+          }
+        );
+        return res.status(200).json({
+          message: `Successfully updated status`,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      res
+        .status(500)
+        .json({ message: `Failed to edit status | Internal Server Error` });
     }
   },
 };
