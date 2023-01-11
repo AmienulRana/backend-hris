@@ -1,6 +1,8 @@
 const Employment = require("./model");
 const fs = require("fs");
 const Salary = require("../salary/model");
+const Company = require("../company/model");
+const Shift = require("../workshift/model");
 
 module.exports = {
   addEmployement: async (req, res) => {
@@ -133,6 +135,9 @@ module.exports = {
       })
         .populate({ path: "company_id", select: "company_name" })
         .populate({ path: "emp_depid", select: "dep_name dep_workshift" })
+        .populate(
+          "emp_attadance.senin.shift emp_attadance.selasa.shift emp_attadance.rabu.shift emp_attadance.kamis.shift emp_attadance.jumat.shift emp_attadance.sabtu.shift emp_attadance.minggu.shift"
+        )
         .populate({ path: "emp_desid", select: "des_name" });
       return res.status(200).json(employment);
     } catch (error) {
@@ -333,6 +338,24 @@ module.exports = {
       return res
         .status(500)
         .json({ message: "Failed to Update Shift Employment" });
+    }
+  },
+  getAllWorkShiftEmployment: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const findEmployment = await Employment.findOne({ _id: id });
+      const findCompanyOfUser = await Company.findOne({
+        _id: findEmployment.company_id,
+      });
+      const getAllShiftInCompany = await Shift.find({
+        company_id: findCompanyOfUser._id,
+      }).select("_id shift_desc");
+      return res.status(200).json(getAllShiftInCompany);
+    } catch (error) {
+      console.log(error);
+      return res
+        .status(500)
+        .json({ message: "Failed to get all Shift your company" });
     }
   },
 };

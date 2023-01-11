@@ -7,6 +7,7 @@ const {
   editPesonalDetail,
   editEmploymentDetail,
   editWorkShift,
+  getAllWorkShiftEmployment,
 } = require("./controller");
 const router = express.Router();
 const path = require("path");
@@ -53,4 +54,5 @@ router.get("/:id", authenticationToken, detailEmployment);
 router.put("/personal-detail/:id", authenticationToken, editPesonalDetail);
 router.put("/employment-detail/:id", authenticationToken, editEmploymentDetail);
 router.put("/employment-workshift/:id", authenticationToken, editWorkShift);
+router.get("/workshift/:id", getAllWorkShiftEmployment);
 module.exports = router;
