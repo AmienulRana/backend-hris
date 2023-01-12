@@ -16,6 +16,7 @@ const ShiftRoute = require("./workshift/routes");
 const AllowDeductRoute = require("./allow-deduction/routes");
 const AllowanceEmployment = require("./emp-allowance/routes");
 const DeductionEmployment = require("./emp-deduction/routes");
+const LeaveRequestRoute = require("./leave-request/routes");
 const path = require("path");
 const LeaveRoute = require("./leave-holidays/routes");
 const router = express.Router();
@@ -56,6 +57,7 @@ app.use(`/${api_version}/allowance`, AllowanceEmployment);
 app.use(`/${api_version}/deduction`, DeductionEmployment);
 app.use(`/${api_version}/shift`, ShiftRoute);
 app.use(`/${api_version}/leave-holiday`, LeaveRoute);
+app.use(`/${api_version}/leave-request`, LeaveRequestRoute);
 
 app.listen(process.env.PORT, () => {
   console.log(`Server start running on port ${process.env.PORT}`);
