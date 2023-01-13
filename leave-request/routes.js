@@ -3,6 +3,7 @@ const { authenticationToken } = require("../middleware/authentication");
 const {
   addLeaveRequest,
   getLeaveRequest,
+  editStatusLeaveRequest,
   // getDepartement,
   // editDepartement,
   // detailDepartement,
@@ -10,7 +11,7 @@ const {
 const router = express.Router();
 
 router.post("/", authenticationToken, addLeaveRequest);
-// router.put("/:id", authenticationToken, editDepartement);
+router.put("/status/:id", authenticationToken, editStatusLeaveRequest);
 // router.get("/:id", detailDepartement);
 router.get("/", authenticationToken, getLeaveRequest);
 // router.post("/login", loginCompany);
