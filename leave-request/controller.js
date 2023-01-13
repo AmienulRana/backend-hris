@@ -13,6 +13,8 @@ module.exports = {
         empleave_apply_date,
         empleave_reason,
         empleave_status,
+        empleave_start_hours,
+        empleave_end_hours,
       } = req.body;
       const { role } = req.admin;
       if (role === "Super Admin" || role === "App Admin") {
@@ -30,6 +32,8 @@ module.exports = {
           empleave_apply_date,
           empleave_reason,
           empleave_status,
+          empleave_start_hours,
+          empleave_end_hours,
         });
         await assignLeave.save();
         return res
@@ -37,41 +41,34 @@ module.exports = {
           .json({ message: "Successfully created a Assign Leave" });
       }
     } catch (error) {
-      console.log(error);
       res.status(500).json({ message: "Failed to Add new departement" });
     }
   },
-  editDepartement: async (req, res) => {
+  editStatusLeaveRequest: async (req, res) => {
     try {
-      const { dep_name, dep_manager, dep_desc, dep_location, dep_workshift } =
-        req.body;
       const { id } = req.params;
       const { role } = req?.admin;
-      console.log(role);
       if (role === "Super Admin" || role === "App Admin") {
-        const departement = await Departement.updateOne(
+        const assignLeave = await AssignLeave.updateOne(
           { _id: id },
           {
             $set: {
-              dep_name,
-              dep_manager,
-              dep_desc,
-              dep_location,
-              dep_workshift,
+              empleave_status: req.body.empleave_status,
             },
           }
         );
-        return res
-          .status(200)
-          .json({ message: "Successfully edited Departement" });
+        if (assignLeave.modifiedCount > 0) {
+          return res.status(200).json({
+            message: `Successfully updated status to ${req.body.empleave_status}`,
+          });
+        }
+        return res.status(422).json({ message: "No Data Changed" });
       } else {
-        return res
-          .status(422)
-          .json({ message: "You can't change departments" });
+        return res.status(422).json({ message: "You can't change status" });
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: "Failed to edited departement" });
+      res.status(500).json({ message: "Failed to edited status" });
     }
   },
   getLeaveRequest: async (req, res) => {
