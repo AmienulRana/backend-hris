@@ -21,6 +21,12 @@ const LeaveRequestSchema = new Schema({
   empleave_end_date: {
     type: String,
   },
+  empleave_start_hours: {
+    type: String,
+  },
+  empleave_end_hours: {
+    type: String,
+  },
   empleave_leave_duration: {
     type: String,
   },
