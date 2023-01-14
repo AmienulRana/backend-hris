@@ -1,14 +1,18 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const DepartementSchema = new Schema({
+const DesignationSchema = new Schema({
   company_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Company",
   },
+  emp_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Employmeent",
+  },
   des_name: {
     type: String,
-    required: [true, "Departement name must be filled in"],
+    required: [true, "Designation name must be filled in"],
   },
   des_desc: {
     type: String,
@@ -18,4 +22,4 @@ const DepartementSchema = new Schema({
   },
 });
 
-module.exports = mongoose.model("Designation", DepartementSchema);
+module.exports = mongoose.model("Designation", DesignationSchema);

@@ -1,15 +1,15 @@
 const express = require("express");
 const { authenticationToken } = require("../middleware/authentication");
 const {
-  addLeaveRequest,
-  getLeaveRequest,
-  editStatusLeaveRequest,
+  addOvertimeRequest,
+  getOvertimeRequest,
+  editOvertimeRequest,
 } = require("./controller");
 const router = express.Router();
 
-router.post("/", authenticationToken, addLeaveRequest);
-router.put("/status/:id", authenticationToken, editStatusLeaveRequest);
+router.post("/", authenticationToken, addOvertimeRequest);
+router.put("/:id", authenticationToken, editOvertimeRequest);
 // router.get("/:id", detailDepartement);
-router.get("/", authenticationToken, getLeaveRequest);
+router.get("/", authenticationToken, getOvertimeRequest);
 // router.post("/login", loginCompany);
 module.exports = router;

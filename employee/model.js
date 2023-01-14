@@ -57,10 +57,12 @@ const EmployementSchema = new Schema({
     ref: "Designation",
   },
   emp_fsuperior: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Designation",
   },
   emp_ssuperior: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Designation",
   },
   emp_tanggungan: {
     type: String,
@@ -78,33 +80,115 @@ const EmployementSchema = new Schema({
   emp_joining_data: {
     type: String,
   },
+  role: {
+    type: String,
+    enum: ["App Admin", "Manager", "Employment"],
+    default: "Employment",
+  },
   emp_attadance: {
     senin: {
-      shift: { type: mongoose.Schema.Types.ObjectId, ref: "shift" },
+      shift: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "shift",
+        required: false,
+        default: function () {
+          if (this.shift === "") {
+            return null;
+          } else {
+            return this.shift;
+          }
+        },
+      },
       off_day: { type: Boolean },
     },
     selasa: {
-      shift: { type: mongoose.Schema.Types.ObjectId, ref: "shift" },
+      shift: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "shift",
+        required: false,
+        default: function () {
+          if (this.shift === "") {
+            return null;
+          } else {
+            return this.shift;
+          }
+        },
+      },
       off_day: { type: Boolean },
     },
     rabu: {
-      shift: { type: mongoose.Schema.Types.ObjectId, ref: "shift" },
+      shift: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "shift",
+        required: false,
+        default: function () {
+          if (this.shift === "") {
+            return null;
+          } else {
+            return this.shift;
+          }
+        },
+      },
       off_day: { type: Boolean },
     },
     kamis: {
-      shift: { type: mongoose.Schema.Types.ObjectId, ref: "shift" },
+      shift: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "shift",
+        required: false,
+        default: function () {
+          if (this.shift === "") {
+            return null;
+          } else {
+            return this.shift;
+          }
+        },
+      },
       off_day: { type: Boolean },
     },
     jumat: {
-      shift: { type: mongoose.Schema.Types.ObjectId, ref: "shift" },
+      shift: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "shift",
+        required: false,
+        default: function () {
+          if (this.shift === "") {
+            return null;
+          } else {
+            return this.shift;
+          }
+        },
+      },
       off_day: { type: Boolean },
     },
     sabtu: {
-      shift: { type: mongoose.Schema.Types.ObjectId, ref: "shift" },
+      shift: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "shift",
+        required: false,
+        default: function () {
+          if (this.shift === "") {
+            return null;
+          } else {
+            return this.shift;
+          }
+        },
+      },
       off_day: { type: Boolean },
     },
     minggu: {
-      shift: { type: mongoose.Schema.Types.ObjectId, ref: "shift" },
+      shift: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "shift",
+        required: false,
+        default: function () {
+          if (this.shift === "") {
+            return null;
+          } else {
+            return this.shift;
+          }
+        },
+      },
       off_day: { type: Boolean },
     },
   },

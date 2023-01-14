@@ -54,15 +54,12 @@ module.exports = {
     try {
       const { role } = req.admin;
       if (role === "Super Admin" || "App Admin") {
-        console.log(role);
         const get_emp_status = await EmpStatus.find({
           company_id:
             role === "Super Admin"
               ? req.query.company_id
               : req.admin.company_id,
         });
-        console.log(get_emp_status);
-        console.log(req.query.company_id);
         return res.status(200).json(get_emp_status);
       }
     } catch (error) {
