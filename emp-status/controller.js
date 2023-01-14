@@ -64,8 +64,8 @@ module.exports = {
       }
     } catch (error) {
       return res
-        .status(200)
-        .json({ message: "Failed to add new status | Server Error" });
+        .status(500)
+        .json({ message: "Failed to get status | Server Error" });
     }
   },
 };
