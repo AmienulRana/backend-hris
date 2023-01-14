@@ -47,9 +47,8 @@ module.exports = {
             : employement?.emp_fsuperior,
         },
       };
-      const overtimeRequest = new OvertimeRequest({
-        ...payload,
-      });
+      console.log(payload);
+      const overtimeRequest = new OvertimeRequest(payload);
       await overtimeRequest.save();
       return res
         .status(200)
@@ -114,11 +113,57 @@ module.exports = {
   editOvertimeRequest: async (req, res) => {
     try {
       console.log(req.body);
+      const { overtime_fsuperior, overtime_ssuperior, overtime_hr } = req.body;
+      const findOvertime = await OvertimeRequest.findOne({
+        _id: req.params.id,
+      });
       const overtimeRequest = await OvertimeRequest.updateOne(
         { _id: req.params.id },
         {
           $set: {
-            ...req.body,
+            overtime_fsuperior: {
+              ...findOvertime?.overtime_fsuperior,
+              status: overtime_fsuperior?.status,
+              approved_by: overtime_fsuperior?.approved_by,
+              approved_date:
+                findOvertime?.overtime_fsuperior?.status ===
+                overtime_fsuperior?.status
+                  ? findOvertime?.overtime_fsuperior.approved_date
+                  : overtime_fsuperior?.approved_date,
+              approved_hours:
+                findOvertime?.overtime_fsuperior?.status ===
+                overtime_fsuperior?.status
+                  ? findOvertime?.overtime_fsuperior?.approved_hours
+                  : overtime_fsuperior?.approved_hours,
+            },
+            overtime_ssuperior: {
+              ...findOvertime?.overtime_ssuperior,
+              status: overtime_ssuperior?.status,
+              approved_by: overtime_ssuperior?.approved_by,
+              approved_date:
+                findOvertime?.overtime_ssuperior?.status ===
+                overtime_ssuperior?.status
+                  ? findOvertime?.overtime_ssuperior?.approved_date
+                  : overtime_ssuperior?.approved_date,
+              approved_hours:
+                findOvertime?.overtime_ssuperior?.status ===
+                overtime_ssuperior?.status
+                  ? findOvertime?.overtime_ssuperior.approved_hours
+                  : overtime_ssuperior?.approved_hours,
+            },
+            overtime_hr: {
+              ...findOvertime?.overtime_hr,
+              status: overtime_hr?.status,
+              approved_by: overtime_hr?.approved_by,
+              approved_date:
+                findOvertime?.overtime_hr?.status === overtime_hr?.status
+                  ? findOvertime?.overtime_hr?.approved_date
+                  : overtime_hr?.approved_date,
+              approved_hours:
+                findOvertime?.overtime_hr?.status === overtime_hr?.status
+                  ? findOvertime?.overtime_hr.approved_hours
+                  : overtime_hr?.approved_hours,
+            },
           },
         }
       );
