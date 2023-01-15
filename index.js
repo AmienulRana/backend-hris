@@ -20,6 +20,7 @@ const LeaveRequestRoute = require("./leave-request/routes");
 const EmploymentStatusRoute = require("./emp-status/routes");
 const EmploymentWarningRoute = require("./emp-warning/routes");
 const OvertimeRequestRoute = require("./overtime-request/routes");
+const OutsideRequestRoute = require("./outside-request/routes");
 const path = require("path");
 const LeaveRoute = require("./leave-holidays/routes");
 const router = express.Router();
@@ -64,6 +65,7 @@ app.use(`/${api_version}/leave-request`, LeaveRequestRoute);
 app.use(`/${api_version}/employment-status`, EmploymentStatusRoute);
 app.use(`/${api_version}/employment-warning`, EmploymentWarningRoute);
 app.use(`/${api_version}/overtime-request`, OvertimeRequestRoute);
+app.use(`/${api_version}/outside-request`, OutsideRequestRoute);
 
 app.listen(process.env.PORT, () => {
   console.log(`Server start running on port ${process.env.PORT}`);
