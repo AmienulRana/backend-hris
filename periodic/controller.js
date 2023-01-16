@@ -86,4 +86,25 @@ module.exports = {
         .json({ message: "Failed to get periodic | Server Error" });
     }
   },
+  getPeriodicActive: async (req, res) => {
+    try {
+      const { role } = req.admin;
+      const company_id =
+        role === "Super Admin"
+          ? req?.query?.company_id
+          : req?.admin?.company_id;
+      if (req.admin.role === "Super Admin" || req.admin.role === "App Admin") {
+        const periodic = await Periodic.findOne({
+          company_id,
+          periodic_status: true,
+        });
+        console.log(periodic);
+        res.status(200).json(periodic);
+      }
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ message: "Failed to get periodic | Server Error" });
+    }
+  },
 };
