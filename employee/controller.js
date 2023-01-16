@@ -21,6 +21,7 @@ module.exports = {
         emp_birthday,
         emp_blood,
         emp_nik_karyawan,
+        emp_tanggungan,
         emp_depid,
         emp_desid,
         emp_status,
@@ -146,6 +147,8 @@ module.exports = {
         .populate(
           "emp_attadance.senin.shift emp_attadance.selasa.shift emp_attadance.rabu.shift emp_attadance.kamis.shift emp_attadance.jumat.shift emp_attadance.sabtu.shift emp_attadance.minggu.shift"
         )
+        .populate({ path: "emp_fsuperior" })
+        .populate({ path: "emp_ssuperior" })
         .populate({
           path: "emp_status",
           select: "empstatus_name empstatus_color",
@@ -327,6 +330,7 @@ module.exports = {
       const { role } = req.admin;
       const { id } = req.params;
       if (role === "Super Admin" || "App Admin") {
+        console.log(req.body);
         const newEmployment = await Employment.updateOne(
           { _id: id },
           {
@@ -341,9 +345,9 @@ module.exports = {
           return res.json({
             message: "Successfully updated shift this Employment",
           });
-        } else {
-          return res.json({ message: "No data changed" });
         }
+      } else {
+        return res.status(422).json({ message: "No data changed" });
       }
     } catch (error) {
       console.log(error);
