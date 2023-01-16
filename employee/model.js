@@ -68,8 +68,8 @@ const EmployementSchema = new Schema({
     type: String,
   },
   emp_status: {
-    type: String,
-    enum: ["Permanent", "Probation", "Designation"],
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "emp-status",
   },
   emp_nik_karyawan: {
     type: String,
