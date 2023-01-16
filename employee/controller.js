@@ -109,6 +109,10 @@ module.exports = {
             )
             .populate({ path: "company_id", select: "company_name" })
             .populate({ path: "emp_depid", select: "dep_name dep_workshift" })
+            .populate({
+              path: "emp_status",
+              select: "empstatus_name empstatus_color",
+            })
             .populate({ path: "emp_desid", select: "des_name" });
           return res.status(200).json(employment);
         }
@@ -119,6 +123,10 @@ module.exports = {
           .select("company_id emp_fullname emp_desid emp_depid emp_status ")
           .populate({ path: "company_id", select: "company_name" })
           .populate({ path: "emp_depid", select: "dep_name dep_workshift" })
+          .populate({
+            path: "emp_status",
+            select: "empstatus_name empstatus_color",
+          })
           .populate({ path: "emp_desid", select: "des_name" });
         return res.status(200).json(employment);
       }
@@ -138,6 +146,10 @@ module.exports = {
         .populate(
           "emp_attadance.senin.shift emp_attadance.selasa.shift emp_attadance.rabu.shift emp_attadance.kamis.shift emp_attadance.jumat.shift emp_attadance.sabtu.shift emp_attadance.minggu.shift"
         )
+        .populate({
+          path: "emp_status",
+          select: "empstatus_name empstatus_color",
+        })
         .populate({ path: "emp_desid", select: "des_name" });
       return res.status(200).json(employment);
     } catch (error) {
