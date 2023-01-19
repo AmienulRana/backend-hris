@@ -24,6 +24,9 @@ const OutsideRequestRoute = require("./outside-request/routes");
 const PeriodicRoute = require("./periodic/routes");
 const path = require("path");
 const LeaveRoute = require("./leave-holidays/routes");
+const LeaveSettingRoute = require("./leave-setting/routes");
+const OffDayRoute = require("./off-day/routes");
+const AnnouncementRoute = require("./announcements/routes");
 const router = express.Router();
 
 app.use((req, res, next) => {
@@ -68,6 +71,9 @@ app.use(`/${api_version}/employment-warning`, EmploymentWarningRoute);
 app.use(`/${api_version}/overtime-request`, OvertimeRequestRoute);
 app.use(`/${api_version}/outside-request`, OutsideRequestRoute);
 app.use(`/${api_version}/periodic`, PeriodicRoute);
+app.use(`/${api_version}/leaves`, LeaveSettingRoute);
+app.use(`/${api_version}/off-day`, OffDayRoute);
+app.use(`/${api_version}/announcement`, AnnouncementRoute);
 
 app.listen(process.env.PORT, () => {
   console.log(`Server start running on port ${process.env.PORT}`);
