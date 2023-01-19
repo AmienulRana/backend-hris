@@ -27,7 +27,17 @@ const LeaveRoute = require("./leave-holidays/routes");
 const LeaveSettingRoute = require("./leave-setting/routes");
 const OffDayRoute = require("./off-day/routes");
 const AnnouncementRoute = require("./announcements/routes");
+const AttendanceRoute = require("./attedance/routes");
 const router = express.Router();
+const cron = require("node-cron");
+const Employment = require("./employee/model");
+
+cron.schedule("0 0 * * *", function () {
+  console.log("node cro berhasil di jalankan");
+  Employment.updateMany({}, { $set: { emp_attendance_status: "Absent" } })
+    .then(() => console.log("emp_attendance_status updated"))
+    .catch((err) => console.error(err));
+});
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -74,7 +84,8 @@ app.use(`/${api_version}/periodic`, PeriodicRoute);
 app.use(`/${api_version}/leaves`, LeaveSettingRoute);
 app.use(`/${api_version}/off-day`, OffDayRoute);
 app.use(`/${api_version}/announcement`, AnnouncementRoute);
+app.use(`/${api_version}/attendance`, AttendanceRoute);
 
-app.listen(process.env.PORT, () => {
+app.listen(process.env.PORT, async () => {
   console.log(`Server start running on port ${process.env.PORT}`);
 });
