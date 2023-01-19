@@ -80,6 +80,9 @@ const EmployementSchema = new Schema({
   emp_joining_data: {
     type: String,
   },
+  emp_attadance_status: {
+    type: String,
+  },
   role: {
     type: String,
     enum: ["App Admin", "Manager", "Employment"],
