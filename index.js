@@ -42,13 +42,6 @@ app.use((req, res, next) => {
   next();
 });
 
-cron.schedule("0 0 * * *", function () {
-  console.log("node cro berhasil di jalankan");
-  Employment.updateMany({}, { $set: { emp_attendance_status: "Absent" } })
-    .then(() => console.log("emp_attendance_status updated"))
-    .catch((err) => console.error(err));
-});
-
 // app.use(cors());
 
 app.use(express.json());
@@ -85,6 +78,12 @@ app.use(`/${api_version}/leaves`, LeaveSettingRoute);
 app.use(`/${api_version}/off-day`, OffDayRoute);
 app.use(`/${api_version}/announcement`, AnnouncementRoute);
 app.use(`/${api_version}/attendance`, AttendanceRoute);
+
+cron.schedule("0 0 * * *", function () {
+  Employment.updateMany({}, { $set: { emp_attendance_status: "Absent" } })
+    .then(() => console.log("emp_attendance_status updated"))
+    .catch((err) => console.error(err));
+});
 
 app.listen(process.env.PORT, async () => {
   console.log(`Server start running on port ${process.env.PORT}`);
