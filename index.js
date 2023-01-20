@@ -32,13 +32,6 @@ const router = express.Router();
 const cron = require("node-cron");
 const Employment = require("./employee/model");
 
-cron.schedule("0 0 * * *", function () {
-  console.log("node cro berhasil di jalankan");
-  Employment.updateMany({}, { $set: { emp_attendance_status: "Absent" } })
-    .then(() => console.log("emp_attendance_status updated"))
-    .catch((err) => console.error(err));
-});
-
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
@@ -47,6 +40,13 @@ app.use((req, res, next) => {
   );
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
   next();
+});
+
+cron.schedule("0 0 * * *", function () {
+  console.log("node cro berhasil di jalankan");
+  Employment.updateMany({}, { $set: { emp_attendance_status: "Absent" } })
+    .then(() => console.log("emp_attendance_status updated"))
+    .catch((err) => console.error(err));
 });
 
 // app.use(cors());
