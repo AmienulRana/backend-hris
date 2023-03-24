@@ -1,7 +1,103 @@
 const AssignLeave = require("./model");
+const Employment = require("../employee/model");
+const Request = require("../request/model");
+
+// function getFormattedDateTime() {
+//   const date = new Date();
+//   const year = date.getFullYear();
+//   const month = ("0" + (date.getMonth() + 1)).slice(-2);
+//   const day = ("0" + date.getDate()).slice(-2);
+//   let hour = date.getHours();
+//   const amPm = hour >= 12 ? "PM" : "AM";
+//   hour = ("0" + (hour % 12 || 12)).slice(-2);
+//   const minute = ("0" + date.getMinutes()).slice(-2);
+
+//   return `${year}-${month}-${day} ${hour}:${minute} ${amPm}`;
+// }
+
+function getFormattedDateTime() {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = ("0" + (date.getMonth() + 1)).slice(-2);
+  const day = ("0" + date.getDate()).slice(-2);
+  let hour = date.getHours();
+  const minute = ("0" + date.getMinutes()).slice(-2);
+  const amPm = hour >= 12 ? "PM" : "AM";
+
+  if (hour < 10) {
+    hour = "0" + hour;
+  }
+
+  return `${year}-${month}-${day} ${hour}:${minute} ${amPm}`;
+}
 
 module.exports = {
+  getFormattedDateTime,
   addLeaveRequest: async (req, res) => {
+    try {
+      const {
+        emp_id,
+        empleave_type_id,
+        empleave_leave_type,
+        empleave_start_date,
+        empleave_end_date,
+        empleave_leave_duration,
+        empleave_apply_date,
+        empleave_reason,
+        empleave_status = "Pending",
+        empleave_start_hours,
+        empleave_end_hours,
+      } = req.body;
+      const { role } = req.admin;
+      const company_id =
+        role === "Super Admin " || role === "Group Admin"
+          ? req.query.company_id
+          : req.admin.company_id;
+      if (
+        role === "Super Admin" ||
+        role === "App Admin" ||
+        role === "Group Admin"
+      ) {
+        const employement = await Employment.findOne({ _id: emp_id });
+        const payload = {
+          company_id,
+          emp_id,
+          empleave_type_id,
+          empleave_leave_type,
+          empleave_start_date,
+          empleave_end_date,
+          empleave_leave_duration,
+          empleave_apply_date,
+          empleave_reason,
+          empleave_status,
+          empleave_start_hours,
+          empleave_end_hours,
+          empleave_fsuperior: { fsuperior_id: employement?.emp_fsuperior },
+          empleave_ssuperior: {
+            ssuperior_id: employement.emp_ssuperior
+              ? employement.emp_ssuperior
+              : employement?.emp_fsuperior,
+          },
+        };
+        const assignLeave = new AssignLeave({ ...payload });
+        await assignLeave.save().then(async (leave) => {
+          const request = new Request({
+            company_id,
+            request_data_id: leave?._id,
+            request_type: "Leave",
+            request_datetime: getFormattedDateTime(),
+          });
+          await request.save();
+        });
+        return res
+          .status(200)
+          .json({ message: "Successfully created a Assign Leave" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to Add new departement" });
+    }
+  },
+  editDataLeaveRequest: async (req, res) => {
     try {
       const {
         emp_id,
@@ -17,55 +113,113 @@ module.exports = {
         empleave_end_hours,
       } = req.body;
       const { role } = req.admin;
-      if (role === "Super Admin" || role === "App Admin") {
-        const assignLeave = new AssignLeave({
-          company_id:
-            role === "Super Admin"
-              ? req.query.company_id
-              : req.admin.company_id,
-          emp_id,
-          empleave_type_id,
-          empleave_leave_type,
-          empleave_start_date,
-          empleave_end_date,
-          empleave_leave_duration,
-          empleave_apply_date,
-          empleave_reason,
-          empleave_status,
-          empleave_start_hours,
-          empleave_end_hours,
-        });
-        await assignLeave.save();
+      const company_id =
+        role === "Super Admin " || role === "Group Admin"
+          ? req.query.company_id
+          : req.admin.company_id;
+      if (
+        role === "Super Admin" ||
+        role === "App Admin" ||
+        role === "Group Admin"
+      ) {
+        const assignLeave = await AssignLeave.updateOne(
+          { _id: req.params.id },
+          {
+            $set: {
+              company_id,
+              emp_id,
+              empleave_type_id,
+              empleave_leave_type,
+              empleave_start_date,
+              empleave_end_date,
+              empleave_leave_duration,
+              empleave_apply_date,
+              empleave_reason,
+              empleave_status,
+              empleave_start_hours,
+              empleave_end_hours,
+            },
+          }
+        );
         return res
           .status(200)
-          .json({ message: "Successfully created a Assign Leave" });
+          .json({ message: "Successfully edited a Assign Leave" });
       }
     } catch (error) {
-      res.status(500).json({ message: "Failed to Add new departement" });
+      res.status(500).json({ message: "Failed to edited Assign Leave" });
     }
   },
   editStatusLeaveRequest: async (req, res) => {
     try {
-      const { id } = req.params;
-      const { role } = req?.admin;
-      if (role === "Super Admin" || role === "App Admin") {
-        const assignLeave = await AssignLeave.updateOne(
-          { _id: id },
-          {
-            $set: {
-              empleave_status: req.body.empleave_status,
+      const { empleave_fsuperior, empleave_ssuperior, empleave_hr } = req.body;
+      const findOvertime = await AssignLeave.findOne({
+        _id: req.params.id,
+      });
+      const overtimeRequest = await AssignLeave.updateOne(
+        { _id: req.params.id },
+        {
+          $set: {
+            empleave_fsuperior: {
+              ...findOvertime?.empleave_fsuperior,
+              status: empleave_fsuperior?.status,
+              approved_by: empleave_fsuperior?.approved_by,
+              approved_date:
+                findOvertime?.empleave_fsuperior?.status ===
+                empleave_fsuperior?.status
+                  ? findOvertime?.empleave_fsuperior.approved_date
+                  : empleave_fsuperior?.approved_date,
+              approved_hours:
+                findOvertime?.empleave_fsuperior?.status ===
+                empleave_fsuperior?.status
+                  ? findOvertime?.empleave_fsuperior?.approved_hours
+                  : empleave_fsuperior?.approved_hours,
             },
-          }
-        );
-        if (assignLeave.modifiedCount > 0) {
-          return res.status(200).json({
-            message: `Successfully updated status to ${req.body.empleave_status}`,
-          });
+            empleave_ssuperior: {
+              ...findOvertime?.empleave_ssuperior,
+              status: empleave_ssuperior?.status,
+              approved_by: empleave_ssuperior?.approved_by,
+              approved_date:
+                findOvertime?.empleave_ssuperior?.status ===
+                empleave_ssuperior?.status
+                  ? findOvertime?.empleave_ssuperior?.approved_date
+                  : empleave_ssuperior?.approved_date,
+              approved_hours:
+                findOvertime?.empleave_ssuperior?.status ===
+                empleave_ssuperior?.status
+                  ? findOvertime?.empleave_ssuperior.approved_hours
+                  : empleave_ssuperior?.approved_hours,
+            },
+            empleave_hr: {
+              ...findOvertime?.empleave_hr,
+              status: empleave_hr?.status,
+              approved_by: empleave_hr?.approved_by,
+              approved_date:
+                findOvertime?.empleave_hr?.status === empleave_hr?.status
+                  ? findOvertime?.empleave_hr?.approved_date
+                  : empleave_hr?.approved_date,
+              approved_hours:
+                findOvertime?.empleave_hr?.status === empleave_hr?.status
+                  ? findOvertime?.empleave_hr.approved_hours
+                  : empleave_hr?.approved_hours,
+            },
+            empleave_status:
+              empleave_hr?.status === "Approved"
+                ? "Approved"
+                : empleave_hr?.status === "Rejected"
+                ? "Rejected"
+                : "Pending",
+          },
         }
-        return res.status(422).json({ message: "No Data Changed" });
+      );
+      if (overtimeRequest.modifiedCount > 0) {
+        return res
+          .status(200)
+          .json({ message: "Successfully edit status Request Leave" });
       } else {
-        return res.status(422).json({ message: "You can't change status" });
+        console.log(error);
+        res.status(500).json({ message: "Failed to edited status" });
       }
+      // res.status(500).json({ message: "Failed to edited status" });
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Failed to edited status" });
@@ -75,18 +229,40 @@ module.exports = {
     try {
       const { role } = req.admin;
       const company_id =
-        role === "Super Admin"
-          ? req?.query?.company_id
-          : req?.admin?.company_id;
-      if (req.admin.role === "Super Admin" || req.admin.role === "App Admin") {
-        const leaveRequest = await AssignLeave.find({ company_id }).populate({
-          path: "emp_id",
-          select: "emp_fullname _id emp_depid",
-          populate: {
-            path: "emp_depid",
-            select: "dep_name",
-          },
-        });
+        role === "Super Admin " || role === "Group Admin"
+          ? req.query.company_id
+          : req.admin.company_id;
+      if (
+        req.admin.role === "Super Admin" ||
+        req.admin.role === "App Admin" ||
+        role === "Group Admin"
+      ) {
+        const leaveRequest = await AssignLeave.find({ company_id })
+          .populate({
+            path: "emp_id",
+            select: "emp_fullname _id emp_depid",
+            populate: {
+              path: "emp_depid",
+              select: "dep_name",
+            },
+          })
+          .populate("empleave_type_id")
+          .populate({
+            path: "empleave_fsuperior.fsuperior_id",
+            select: "des_name emp_id",
+            populate: {
+              path: "emp_id",
+              select: "emp_fullname",
+            },
+          })
+          .populate({
+            path: "empleave_ssuperior.ssuperior_id",
+            select: "des_name emp_id",
+            populate: {
+              path: "emp_id",
+              select: "emp_fullname",
+            },
+          });
 
         res.status(200).json(leaveRequest);
       }
@@ -105,6 +281,34 @@ module.exports = {
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Failed to Get Departement" });
+    }
+  },
+  deleteLeaveRequest: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { role } = req?.admin;
+      if (
+        role === "Super Admin" ||
+        role === "App Admin" ||
+        role === "Group Admin"
+      ) {
+        const assignLeave = await AssignLeave.deleteOne({ _id: id });
+        if (assignLeave.deletedCount > 0) {
+          await Request.deleteOne({ request_data_id: id });
+          return res.status(200).json({
+            message: `Successfully deleted Leave request`,
+          });
+        }
+        return res
+          .status(422)
+          .json({ message: "Failed deleted Leave request" });
+      } else {
+        return res
+          .status(422)
+          .json({ message: "Failed deleted Leave request" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed deleted Leave request" });
     }
   },
 };

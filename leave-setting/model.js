@@ -10,6 +10,9 @@ const LeaveSchema = new Schema({
     type: String,
     required: true,
   },
+  leave_desc: {
+    type: String,
+  },
   leave_type: {
     type: String,
     enum: ["Unpaid", "Paid"],

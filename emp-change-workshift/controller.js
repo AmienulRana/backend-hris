@@ -2,12 +2,6 @@ const ChangeShift = require("./model");
 const Employment = require("../employee/model");
 const { populate } = require("./model");
 
-function formatHours(jam, menit) {
-  return `${jam < 10 ? "0" + jam.toString() : jam.toString()}:${
-    menit < 10 ? "0" + menit.toString() : menit.toString()
-  } Hours`;
-}
-
 function getDateNow() {
   let today = new Date();
   let date = `${today.getDate()}-${
@@ -16,44 +10,54 @@ function getDateNow() {
   return date;
 }
 
-function getDurationOutside(start_date, end_date) {
-  let date1 = start_date;
-  let date2 = end_date;
-  date1 = new Date(Date.parse(date1));
-  date2 = new Date(Date.parse(date2));
-  const getDuration = (date2 - date1) / (24 * 60 * 60 * 1000);
-  return `${getDuration} Day`;
+function getDayName(date_string) {
+  const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+  const date = new Date(date_string);
+  const dayName = days[date.getUTCDay()];
+  return dayName;
 }
+
 module.exports = {
-  addOvertimeRequest: async (req, res) => {
+  addChangeWorkshift: async (req, res) => {
     try {
-      const { emp_id, empchange_to, empchange_reason, empchange_replacement } =
-        req.body;
-      const employement = await Employment.findOne({ _id: emp_id });
-      const payload = {
-        company_id: employement?.company_id,
+      const {
         emp_id,
         empchange_to,
         empchange_reason,
         empchange_replacement,
-        empchange_date_request: getDateNow(),
-        outside_duration: getDurationOutside(
-          outside_start_date,
-          outside_end_date
-        ),
-        outside_fsuperior: { fsuperior_id: employement?.emp_fsuperior },
-        outside_ssuperior: {
+        empchange_date_request,
+      } = req.body;
+      const employement = await Employment.findOne({ _id: emp_id });
+      const empchange_shift_before =
+        employement?.emp_attadance[
+          getDayName(empchange_date_request).toLocaleLowerCase()
+        ]?.shift;
+      // if (empchange_shift_before === empchange_to) {
+      //   return res
+      //     .status(422)
+      //     .json({ message: "Cannot change with same shift" });
+      // }
+      const payload = {
+        company_id: employement?.company_id,
+        emp_id,
+        empchange_to,
+        empchange_shift_before,
+        empchange_reason,
+        empchange_replacement,
+        empchange_date_request,
+        empchange_request: getDateNow(),
+        empchange_fsuperior: { fsuperior_id: employement?.emp_fsuperior },
+        empchange_ssuperior: {
           ssuperior_id: employement.emp_ssuperior
             ? employement.emp_ssuperior
             : employement?.emp_fsuperior,
         },
       };
-      console.log(payload);
-      //   const overtimeRequest = new ChangeShift(payload);
-      //   await overtimeRequest.save();
-      //   return res
-      //     .status(200)
-      //     .json({ message: "Successfully added Request Outside" });
+      const changeShift = new ChangeShift(payload);
+      await changeShift.save();
+      return res
+        .status(200)
+        .json({ message: "Successfully added Request Change Workshift" });
     } catch (error) {
       console.log(error.message);
       if (error?.message) {
@@ -61,108 +65,173 @@ module.exports = {
       }
       return res
         .status(500)
-        .json({ message: "Failed to added Request Outside | Server Error" });
+        .json({ message: "Failed to Request Change Workshift | Server Error" });
     }
   },
-  getOvertimeRequest: async (req, res) => {
+  editDataChangeRequest: async (req, res) => {
+    try {
+      const {
+        emp_id,
+        empchange_to,
+        empchange_reason,
+        empchange_replacement,
+        empchange_date_request,
+      } = req.body;
+      const employement = await Employment.findOne({ _id: emp_id });
+      const empchange_shift_before =
+        employement?.emp_attadance[
+          getDayName(empchange_date_request).toLocaleLowerCase()
+        ]?.shift;
+      // if (empchange_shift_before === empchange_to) {
+      //   return res
+      //     .status(422)
+      //     .json({ message: "Cannot change with same shift" });
+      // }
+      const payload = {
+        company_id: employement?.company_id,
+        emp_id,
+        empchange_to,
+        empchange_shift_before,
+        empchange_reason,
+        empchange_replacement,
+        empchange_date_request,
+        empchange_request: getDateNow(),
+      };
+      const changeShift = await ChangeShift.updateOne(
+        { _id: req.params.id },
+        { $set: { ...payload } }
+      );
+      if (changeShift.modifiedCount > 0) {
+        return res
+          .status(200)
+          .json({ message: "Successfully edited Request Change Workshift" });
+      } else {
+        return res
+          .status(500)
+          .json({ message: "Failed to Request Change Workshift" });
+      }
+    } catch (error) {
+      return res
+        .status(422)
+        .json({ message: "Failed to Request Change Workshift | Server Error" });
+    }
+  },
+  getChangeShiftRequest: async (req, res) => {
     try {
       const { role } = req.admin;
       const company_id =
-        role === "Super Admin"
-          ? req?.query?.company_id
-          : req?.admin?.company_id;
-      if (req.admin.role === "Super Admin" || req.admin.role === "App Admin") {
-        const overtimeRequest = await ChangeShift.find({
-          company_id,
+        role === "Super Admin " || role === "Group Admin"
+          ? req.query.company_id
+          : req.admin.company_id;
+      // if (req.admin.role === "Super Admin" || req.admin.role === "App Admin") {
+      const changeShift = await ChangeShift.find({
+        company_id,
+      })
+        .populate({
+          path: "emp_id",
+          select: "emp_fullname _id emp_depid",
+          populate: {
+            path: "emp_depid",
+            select: "dep_name",
+          },
         })
-          .populate({
+        .populate({
+          path: "empchange_replacement",
+          select: "emp_fullname _id emp_depid",
+          populate: {
+            path: "emp_depid",
+            select: "dep_name",
+          },
+        })
+        .populate({
+          path: "empchange_shift_before",
+          select: "shift_name _id shift_desc",
+        })
+        .populate({
+          path: "empchange_to",
+          select: "shift_name _id shift_desc",
+        })
+        .populate({
+          path: "company_id",
+          select: "company_name",
+        })
+        .populate({
+          path: "empchange_fsuperior.fsuperior_id",
+          select: "des_name emp_id",
+          populate: {
             path: "emp_id",
-            select: "emp_fullname _id emp_depid",
-            populate: {
-              path: "emp_depid",
-              select: "dep_name",
-            },
-          })
-          .populate({
-            path: "company_id",
-            select: "company_name",
-          })
-          .populate({
-            path: "outside_fsuperior.fsuperior_id",
-            select: "des_name emp_id",
-            populate: {
-              path: "emp_id",
-              select: "emp_fullname",
-            },
-          })
-          .populate({
-            path: "outside_ssuperior.ssuperior_id",
-            select: "des_name emp_id",
-            populate: {
-              path: "emp_id",
-              select: "emp_fullname",
-            },
-          });
+            select: "emp_fullname",
+          },
+        })
+        .populate({
+          path: "empchange_ssuperior.ssuperior_id",
+          select: "des_name emp_id",
+          populate: {
+            path: "emp_id",
+            select: "emp_fullname",
+          },
+        });
 
-        res.status(200).json(overtimeRequest);
-      }
+      res.status(200).json(changeShift);
+      // }
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: "Failed to Get Outside Request" });
+      res.status(500).json({ message: "Failed to Get Shift Change Request" });
     }
   },
-  editOvertimeRequest: async (req, res) => {
+  editChangeRequest: async (req, res) => {
     try {
-      const { outside_fsuperior, outside_ssuperior, outside_hr } = req.body;
-      const findOvertime = await OvertimeRequest.findOne({
+      const { empchange_fsuperior, empchange_ssuperior, empchange_hr } =
+        req.body;
+      const findChangeRequest = await ChangeShift.findOne({
         _id: req.params.id,
       });
-      const overtimeRequest = await OvertimeRequest.updateOne(
+      const overtimeRequest = await ChangeShift.updateOne(
         { _id: req.params.id },
         {
           $set: {
-            outside_fsuperior: {
-              ...findOvertime?.outside_fsuperior,
-              status: outside_fsuperior?.status,
-              approved_by: outside_fsuperior?.approved_by,
+            empchange_fsuperior: {
+              ...findChangeRequest?.empchange_fsuperior,
+              status: empchange_fsuperior?.status,
+              approved_by: empchange_fsuperior?.approved_by,
               approved_date:
-                findOvertime?.outside_fsuperior?.status ===
-                outside_fsuperior?.status
-                  ? findOvertime?.outside_fsuperior.approved_date
-                  : outside_fsuperior?.approved_date,
+                findChangeRequest?.empchange_fsuperior?.status ===
+                empchange_fsuperior?.status
+                  ? findChangeRequest?.empchange_fsuperior.approved_date
+                  : empchange_fsuperior?.approved_date,
               approved_hours:
-                findOvertime?.outside_fsuperior?.status ===
-                outside_fsuperior?.status
-                  ? findOvertime?.outside_fsuperior?.approved_hours
-                  : outside_fsuperior?.approved_hours,
+                findChangeRequest?.empchange_fsuperior?.status ===
+                empchange_fsuperior?.status
+                  ? findChangeRequest?.empchange_fsuperior?.approved_hours
+                  : empchange_fsuperior?.approved_hours,
             },
-            outside_ssuperior: {
-              ...findOvertime?.outside_ssuperior,
-              status: outside_ssuperior?.status,
-              approved_by: outside_ssuperior?.approved_by,
+            empchange_ssuperior: {
+              ...findChangeRequest?.empchange_ssuperior,
+              status: empchange_ssuperior?.status,
+              approved_by: empchange_ssuperior?.approved_by,
               approved_date:
-                findOvertime?.outside_ssuperior?.status ===
-                outside_ssuperior?.status
-                  ? findOvertime?.outside_ssuperior?.approved_date
-                  : outside_ssuperior?.approved_date,
+                findChangeRequest?.empchange_ssuperior?.status ===
+                empchange_ssuperior?.status
+                  ? findChangeRequest?.empchange_ssuperior?.approved_date
+                  : empchange_ssuperior?.approved_date,
               approved_hours:
-                findOvertime?.outside_ssuperior?.status ===
-                outside_ssuperior?.status
-                  ? findOvertime?.outside_ssuperior.approved_hours
-                  : outside_ssuperior?.approved_hours,
+                findChangeRequest?.empchange_ssuperior?.status ===
+                empchange_ssuperior?.status
+                  ? findChangeRequest?.empchange_ssuperior.approved_hours
+                  : empchange_ssuperior?.approved_hours,
             },
-            outside_hr: {
-              ...findOvertime?.outside_hr,
-              status: outside_hr?.status,
-              approved_by: outside_hr?.approved_by,
+            empchange_hr: {
+              ...findChangeRequest?.empchange_hr,
+              status: empchange_hr?.status,
+              approved_by: empchange_hr?.approved_by,
               approved_date:
-                findOvertime?.outside_hr?.status === outside_hr?.status
-                  ? findOvertime?.outside_hr?.approved_date
-                  : outside_hr?.approved_date,
+                findChangeRequest?.empchange_hr?.status === empchange_hr?.status
+                  ? findChangeRequest?.empchange_hr?.approved_date
+                  : empchange_hr?.approved_date,
               approved_hours:
-                findOvertime?.outside_hr?.status === outside_hr?.status
-                  ? findOvertime?.outside_hr.approved_hours
-                  : outside_hr?.approved_hours,
+                findChangeRequest?.empchange_hr?.status === empchange_hr?.status
+                  ? findChangeRequest?.empchange_hr.approved_hours
+                  : empchange_hr?.approved_hours,
             },
           },
         }
@@ -170,7 +239,7 @@ module.exports = {
       if (overtimeRequest.modifiedCount > 0) {
         return res
           .status(200)
-          .json({ message: "Successfully edit status overtime" });
+          .json({ message: "Successfully edit status change shift" });
       }
     } catch (error) {
       console.log(error.message);
@@ -179,7 +248,31 @@ module.exports = {
       }
       return res
         .status(500)
-        .json({ message: "Failed to edit status overtime | Server Error" });
+        .json({ message: "Failed to edit status change shift | Server Error" });
+    }
+  },
+  deleteChangeRequest: async (req, res) => {
+    try {
+      const overtimeRequest = await ChangeShift.deleteOne({
+        _id: req.params.id,
+      });
+      if (overtimeRequest.deletedCount > 0) {
+        return res
+          .status(200)
+          .json({ message: "Successfully deleted Change Shift Request" });
+      } else {
+        return res
+          .status(500)
+          .json({ message: "Failed deleted Change Shift Request" });
+      }
+    } catch (error) {
+      console.log(error.message);
+      if (error?.message) {
+        return res.status(500).json({ message: error.message });
+      }
+      return res
+        .status(500)
+        .json({ message: "Failed deleted Change Shift Request" });
     }
   },
 };

@@ -16,9 +16,12 @@ module.exports = {
   addAnnouncement: async (req, res) => {
     try {
       const { role } = req.admin;
+      const company_id =
+        role === "Super Admin " || role === "Group Admin"
+          ? req.query.company_id
+          : req.admin.company_id;
       const announcement = new Announcement({
-        company_id:
-          role === "Super Admin" ? req.query.company_id : req.admin.company_id,
+        company_id,
         ...req.body,
         announcement_created: formatDate(new Date()),
       });
@@ -82,9 +85,12 @@ module.exports = {
   getAnnouncement: async (req, res) => {
     try {
       const { role } = req.admin;
+      const company_id =
+        role === "Super Admin " || role === "Group Admin"
+          ? req.query.company_id
+          : req.admin.company_id;
       const announcement = await Announcement.find({
-        company_id:
-          role === "Super Admin" ? req.query.company_id : req.admin.company_id,
+        company_id,
       }).populate({
         path: "announcement_depid",
         select: "dep_name",

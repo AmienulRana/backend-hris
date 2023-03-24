@@ -40,7 +40,6 @@ const EmployementSchema = new Schema({
   },
   email: {
     type: String,
-    unique: true,
   },
   emp_blood: {
     type: String,
@@ -75,13 +74,23 @@ const EmployementSchema = new Schema({
     type: String,
   },
   emp_location: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "attendance_location",
   },
   emp_joining_data: {
     type: String,
   },
-  emp_attadance_status: {
-    type: String,
+  emp_attendance_status: {
+    type: Boolean,
+    default: true,
+  },
+  emp_employment_status: {
+    type: Boolean,
+    default: true,
+  },
+  emp_payroll_status: {
+    type: Boolean,
+    default: true,
   },
   role: {
     type: String,

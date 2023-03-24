@@ -11,7 +11,8 @@ const DepartementSchema = new Schema({
     required: [true, "Departement name must be filled in"],
   },
   dep_manager: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Employmeent",
   },
   dep_desc: {
     type: String,

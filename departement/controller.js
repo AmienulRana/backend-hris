@@ -6,7 +6,7 @@ module.exports = {
       const { dep_name, dep_manager, dep_desc, dep_location, dep_created } =
         req.body;
       const { role } = req.admin;
-      if (role === "Super Admin") {
+      if (role === "Super Admin" || role === "Group Admin") {
         const newDepartement = new Departement({
           company_id: req.query.company,
           dep_name: dep_name,
@@ -40,12 +40,22 @@ module.exports = {
   },
   editDepartement: async (req, res) => {
     try {
-      const { dep_name, dep_manager, dep_desc, dep_location, dep_workshift } =
-        req.body;
+      const {
+        dep_name,
+        dep_manager,
+        dep_desc,
+        dep_location,
+        dep_workshift,
+        dep_created,
+      } = req.body;
       const { id } = req.params;
       const { role } = req?.admin;
       console.log(role);
-      if (role === "Super Admin" || role === "App Admin") {
+      if (
+        role === "Super Admin" ||
+        role === "App Admin" ||
+        role === "Group Admin"
+      ) {
         const departement = await Departement.updateOne(
           { _id: id },
           {
@@ -55,6 +65,7 @@ module.exports = {
               dep_desc,
               dep_location,
               dep_workshift,
+              dep_created,
             },
           }
         );
@@ -73,21 +84,18 @@ module.exports = {
   },
   getDepartement: async (req, res) => {
     try {
-      const company_id = req?.admin?.company_id;
-      if (req.admin.role === "Super Admin") {
-        const company = req.query.company;
-        const departemen = await Departement.find({
-          company_id: company,
-        }).populate({ path: "company_id", select: "company_name" });
-        res.status(200).json(departemen);
-      }
-      if (company_id) {
-        const departemen = await Departement.find({ company_id }).populate({
-          path: "company_id",
-          select: "company_name",
-        });
-        res.status(200).json(departemen);
-      }
+      const { role } = req.admin;
+      const company_id =
+        role === "Super Admin " || role === "Group Admin"
+          ? req.query.company
+          : req.admin.company_id;
+      console.log(role);
+      const departemen = await Departement.find({
+        company_id: company_id,
+      })
+        .populate({ path: "company_id", select: "company_name" })
+        .populate({ path: "dep_manager", select: "emp_fullname" });
+      res.status(200).json(departemen);
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Failed to Get Departement" });
@@ -98,11 +106,25 @@ module.exports = {
       const { id } = req?.params;
       const departemen = await Departement.findOne({
         _id: id,
-      });
+      }).populate({ path: "dep_manager", select: "emp_fullname" });
       res.status(200).json(departemen);
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Failed to Get Departement" });
+    }
+  },
+  deleteDepartement: async (req, res) => {
+    try {
+      const { id } = req?.params;
+      const departemen = await Departement.deleteOne({
+        _id: id,
+      });
+      return res
+        .status(200)
+        .json({ message: "Successfully Delete Departement" });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Failed to Delete Departement" });
     }
   },
 };

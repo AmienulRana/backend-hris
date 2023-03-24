@@ -12,20 +12,18 @@ module.exports = {
         emp_id,
       } = req.body;
       const { role } = req.admin;
-      if (role === "Super Admin" || role === "App Admin") {
-        const deduction = new Deduction({
-          emp_id,
-          deduction_id,
-          deduction_selfpercent,
-          deduction_totalpercent:
-            Number(deduction_selfpercent) + Number(deduction_companypercent),
-          deduction_companypercent,
-        });
-        await deduction.save();
-        return res
-          .status(200)
-          .json({ message: `Successfully added deduction` });
-      }
+      // if (role === "Super Admin" || role === "App Admin") {
+      const deduction = new Deduction({
+        emp_id,
+        deduction_id,
+        deduction_selfpercent,
+        deduction_totalpercent:
+          Number(deduction_selfpercent) + Number(deduction_companypercent),
+        deduction_companypercent,
+      });
+      await deduction.save();
+      return res.status(200).json({ message: `Successfully added deduction` });
+      // }
     } catch (error) {
       console.log(error);
       res.status(500).json({
@@ -39,27 +37,26 @@ module.exports = {
         req.body;
       const { role } = req.admin;
       const { id } = req.params;
-      if (role === "Super Admin" || role === "App Admin") {
-        const deduction = await Deduction.updateOne(
-          { _id: id },
-          {
-            $set: {
-              deduction_id,
-              deduction_selfpercent,
-              deduction_totalpercent:
-                Number(deduction_selfpercent) +
-                Number(deduction_companypercent),
-              deduction_companypercent,
-            },
-          }
-        );
-        if (deduction.modifiedCount > 0) {
-          return res
-            .status(200)
-            .json({ message: `Successfully updated deduction` });
+      // if (role === "Super Admin" || role === "App Admin") {
+      const deduction = await Deduction.updateOne(
+        { _id: id },
+        {
+          $set: {
+            deduction_id,
+            deduction_selfpercent,
+            deduction_totalpercent:
+              Number(deduction_selfpercent) + Number(deduction_companypercent),
+            deduction_companypercent,
+          },
         }
-        return res.status(422).json({ message: `No data changed` });
+      );
+      if (deduction.modifiedCount > 0) {
+        return res
+          .status(200)
+          .json({ message: `Successfully updated deduction` });
       }
+      return res.status(422).json({ message: `No data changed` });
+      // }
     } catch (error) {
       res.status(500).json({ message: `Failed to edit deduction` });
     }
@@ -98,16 +95,16 @@ module.exports = {
     try {
       const { role } = req.admin;
       const { id } = req.params;
-      if (role === "Super Admin" || role === "App Admin") {
-        const deduction = await Deduction.deleteOne({ _id: id });
-        if (deduction.deletedCount > 0) {
-          return res
-            .status(200)
-            .json({ message: "Successfully deleted Deduction" });
-        }
-      } else {
-        return res.status(422).json({ message: "Failed To Delete" });
+      // if (role === "Super Admin" || role === "App Admin") {
+      const deduction = await Deduction.deleteOne({ _id: id });
+      if (deduction.deletedCount > 0) {
+        return res
+          .status(200)
+          .json({ message: "Successfully deleted Deduction" });
       }
+      // } else {
+      //   return res.status(422).json({ message: "Failed To Delete" });
+      // }
     } catch (error) {
       res.status(500).json({ message: "Failed to deleted | Server Error" });
     }
@@ -116,22 +113,22 @@ module.exports = {
     try {
       const { role } = req.admin;
       const { id } = req.params;
-      if (role === "Super Admin" || role === "App Admin") {
-        const findDeduction = await Deduction.findOne({ _id: id });
-        const deduction = await Deduction.updateOne(
-          { _id: id },
-          {
-            $set: {
-              empallow_deduction_status: findDeduction.empallow_deduction_status
-                ? false
-                : true,
-            },
-          }
-        );
-        return res.status(200).json({
-          message: `Successfully updated status`,
-        });
-      }
+      // if (role === "Super Admin" || role === "App Admin") {
+      const findDeduction = await Deduction.findOne({ _id: id });
+      console.log(findDeduction);
+      const deduction = await Deduction.updateOne(
+        { _id: id },
+        {
+          $set: {
+            deduction_status: findDeduction?.deduction_status ? false : true,
+          },
+        }
+      );
+      console.log(deduction);
+      return res.status(200).json({
+        message: `Successfully updated status`,
+      });
+      // }
     } catch (error) {
       console.log(error);
       res

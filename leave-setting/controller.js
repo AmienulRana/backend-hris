@@ -6,9 +6,14 @@ function returnCompanyId(role, req) {
 
 exports.addLeave = (req, res) => {
   const { role } = req.admin;
+  const company_id =
+    role === "Super Admin " || role === "Group Admin"
+      ? req.query.company_id
+      : req.admin.company_id;
   const leave = new Leave({
     ...req.body,
-    company_id: returnCompanyId(role, req),
+    leave_desc: `${req.body.leave_name} (${req.body.leave_type})`,
+    company_id,
   });
   leave
     .save()
@@ -23,7 +28,12 @@ exports.addLeave = (req, res) => {
 };
 
 exports.getLeaves = (req, res) => {
-  Leave.find({ company_id: returnCompanyId(req.admin.role, req) })
+  const { role } = req.admin;
+  const company_id =
+    role === "Super Admin " || role === "Group Admin"
+      ? req.query.company_id
+      : req.admin.company_id;
+  Leave.find({ company_id })
     .then((leaves) => {
       res.status(200).json(leaves);
     })
@@ -54,6 +64,7 @@ exports.updateLeave = (req, res) => {
       $set: {
         leave_name: req.body.leave_name,
         leave_type: req.body.leave_type,
+        leave_desc: `${req.body.leave_name} (${req.body.leave_type})`,
       },
     }
   )

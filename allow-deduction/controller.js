@@ -5,21 +5,20 @@ module.exports = {
     const { ad_name, ad_desc, ad_type } = req.body;
     try {
       const { role } = req.admin;
-      if (role === "Super Admin" || role === "App Admin") {
-        const allowDeduct = new AllowDeduct({
-          ad_name,
-          ad_desc,
-          ad_type,
-          company_id:
-            role === "Super Admin"
-              ? req.query.company_id
-              : req.admin.company_id,
-        });
-        await allowDeduct.save();
-        return res
-          .status(200)
-          .json({ message: `Successfully added ${ad_type}` });
-      }
+      const company_id =
+        role === "Super Admin " || role === "Group Admin"
+          ? req.query.company_id
+          : req.admin.company_id;
+      // if (role === "Super Admin" || role === "App Admin") {
+      const allowDeduct = new AllowDeduct({
+        ad_name,
+        ad_desc,
+        ad_type,
+        company_id,
+      });
+      await allowDeduct.save();
+      return res.status(200).json({ message: `Successfully added ${ad_type}` });
+      // }
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: `Failed to Add new ${ad_type}` });
@@ -30,21 +29,21 @@ module.exports = {
       const { ad_name, ad_desc, ad_type } = req.body;
       const { role } = req.admin;
       const { id } = req.params;
-      if (role === "Super Admin" || role === "App Admin") {
-        const allowDeduct = await AllowDeduct.updateOne(
-          { _id: id },
-          {
-            $set: {
-              ad_name,
-              ad_desc,
-              ad_type,
-            },
-          }
-        );
-        return res
-          .status(200)
-          .json({ message: `Successfully updated ${ad_type}` });
-      }
+      // if (role === "Super Admin" || role === "App Admin") {
+      const allowDeduct = await AllowDeduct.updateOne(
+        { _id: id },
+        {
+          $set: {
+            ad_name,
+            ad_desc,
+            ad_type,
+          },
+        }
+      );
+      return res
+        .status(200)
+        .json({ message: `Successfully updated ${ad_type}` });
+      // }
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: `Failed to edit` });
@@ -52,10 +51,13 @@ module.exports = {
   },
   getAllowDeduct: async (req, res) => {
     try {
-      const company_id = req?.query?.company_id;
       const { role } = req.admin;
+      const company_id =
+        role === "Super Admin " || role === "Group Admin"
+          ? req.query.company_id
+          : req.admin.company_id;
       const allowDeduct = await AllowDeduct.find({
-        company_id: company_id || req.admin.company_id,
+        company_id,
       });
       res.status(200).json(allowDeduct);
     } catch (error) {
@@ -67,11 +69,10 @@ module.exports = {
     try {
       const { role } = req.admin;
       const { id } = req.params;
-      if (role === "Super Admin" || role === "App Admin") {
-        const allowDeduct = await AllowDeduct.deleteOne({ _id: id });
-        if (allowDeduct.deletedCount > 0) {
-          return res.status(200).json({ message: "Successfully deleted" });
-        }
+      // if (role === "Super Admin" || role === "App Admin") {
+      const allowDeduct = await AllowDeduct.deleteOne({ _id: id });
+      if (allowDeduct.deletedCount > 0) {
+        return res.status(200).json({ message: "Successfully deleted" });
       } else {
         return res.status(422).json({ message: "Failed To Delete" });
       }
@@ -83,20 +84,20 @@ module.exports = {
     try {
       const { role } = req.admin;
       const { id } = req.params;
-      if (role === "Super Admin" || role === "App Admin") {
-        const findAllowDeduct = await AllowDeduct.findOne({ _id: id });
-        const allowDeduct = await AllowDeduct.updateOne(
-          { _id: id },
-          {
-            $set: {
-              ad_status: findAllowDeduct.ad_status ? false : true,
-            },
-          }
-        );
-        return res.status(200).json({
-          message: `Successfully updated status ${findAllowDeduct.ad_type}`,
-        });
-      }
+      // if (role === "Super Admin" || role === "App Admin") {
+      const findAllowDeduct = await AllowDeduct.findOne({ _id: id });
+      const allowDeduct = await AllowDeduct.updateOne(
+        { _id: id },
+        {
+          $set: {
+            ad_status: findAllowDeduct.ad_status ? false : true,
+          },
+        }
+      );
+      return res.status(200).json({
+        message: `Successfully updated status ${findAllowDeduct.ad_type}`,
+      });
+      // }
     } catch (error) {
       console.log(error);
       res

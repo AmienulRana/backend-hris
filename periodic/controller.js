@@ -11,9 +11,9 @@ module.exports = {
       } = req.body;
       const { role } = req.admin;
       const company_id =
-        role === "Super Admin"
-          ? req?.query?.company_id
-          : req?.admin?.company_id;
+        role === "Super Admin " || role === "Group Admin"
+          ? req.query.company_id
+          : req.admin.company_id;
       const periodic = new Periodic({
         company_id,
         periodic_end_date,
@@ -36,16 +36,16 @@ module.exports = {
     try {
       const { role } = req.admin;
       const company_id =
-        role === "Super Admin"
-          ? req?.query?.company_id
-          : req?.admin?.company_id;
-      if (req.admin.role === "Super Admin" || req.admin.role === "App Admin") {
-        const periodic = await Periodic.find({ company_id }).populate({
-          path: "company_id",
-          select: "company_name",
-        });
-        res.status(200).json(periodic);
-      }
+        role === "Super Admin " || role === "Group Admin"
+          ? req.query.company_id
+          : req.admin.company_id;
+      // if (req.admin.role === "Super Admin" || req.admin.role === "App Admin") {
+      const periodic = await Periodic.find({ company_id }).populate({
+        path: "company_id",
+        select: "company_name",
+      });
+      res.status(200).json(periodic);
+      // }
     } catch (error) {
       return res
         .status(500)
@@ -56,51 +56,110 @@ module.exports = {
     try {
       const { role } = req.admin;
       const { id } = req.params;
-      if (req.admin.role === "Super Admin" || req.admin.role === "App Admin") {
-        const findPeriodic = await Periodic.findOne({ _id: id });
-        const all_objs = await Periodic.updateMany(
-          {},
-          { $set: { periodic_status: false } }
-        );
-        const periodic = await Periodic.updateOne(
-          { _id: id },
-          {
-            $set: {
-              periodic_status: findPeriodic.status ? false : true,
-            },
-          }
-        );
-        if (periodic.modifiedCount > 0) {
-          return res
-            .status(200)
-            .json({ message: "Successfuly edited status periodic" });
-        } else {
-          return res
-            .status(200)
-            .json({ message: "Failed to edited status periodic" });
+      // if (req.admin.role === "Super Admin" || req.admin.role === "App Admin") {
+      const findPeriodic = await Periodic.findOne({ _id: id });
+      const company_id =
+        role === "Super Admin " || role === "Group Admin"
+          ? req.query.company_id
+          : req.admin.company_id;
+      console.log(company_id);
+      const all_objs = await Periodic.updateMany(
+        { company_id },
+        { $set: { periodic_status: false } }
+      );
+      const periodic = await Periodic.updateOne(
+        { _id: id },
+        {
+          $set: {
+            periodic_status: findPeriodic.status ? false : true,
+          },
         }
+      );
+      if (periodic.modifiedCount > 0) {
+        return res
+          .status(200)
+          .json({ message: "Successfuly edited status periodic" });
+      } else {
+        return res
+          .status(200)
+          .json({ message: "Failed to edited status periodic" });
       }
+      // }
     } catch (error) {
       return res
         .status(500)
         .json({ message: "Failed to get periodic | Server Error" });
     }
   },
+  editPeriodic: async (req, res) => {
+    try {
+      const { role } = req.admin;
+      const { id } = req.params;
+      const {
+        periodic_years,
+        periodic_month,
+        periodic_start_date,
+        periodic_end_date,
+      } = req.body;
+      // if (req.admin.role === "Super Admin" || req.admin.role === "App Admin") {
+      const periodic = await Periodic.updateOne(
+        { _id: id },
+        {
+          $set: {
+            periodic_years,
+            periodic_month,
+            periodic_start_date,
+            periodic_end_date,
+          },
+        }
+      );
+      if (periodic.modifiedCount > 0) {
+        return res.status(200).json({ message: "Successfuly edited periodic" });
+      } else {
+        return res.status(200).json({ message: "Failed to edited periodic" });
+      }
+      // }
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ message: "Failed to get periodic | Server Error" });
+    }
+  },
+  deletePeriodic: async (req, res) => {
+    try {
+      const { role } = req.admin;
+      const { id } = req.params;
+      // if (req.admin.role === "Super Admin" || req.admin.role === "App Admin") {
+      const periodic = await Periodic.deleteOne({ _id: id });
+      if (periodic.deletedCount > 0) {
+        return res
+          .status(200)
+          .json({ message: "Successfuly deleted periodic" });
+      } else {
+        return res.status(400).json({ message: "Failed to deleted periodic" });
+      }
+      // }
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ message: "Failed to deleted periodic | Server Error" });
+    }
+  },
   getPeriodicActive: async (req, res) => {
     try {
       const { role } = req.admin;
       const company_id =
-        role === "Super Admin"
-          ? req?.query?.company_id
-          : req?.admin?.company_id;
-      if (req.admin.role === "Super Admin" || req.admin.role === "App Admin") {
-        const periodic = await Periodic.findOne({
-          company_id,
-          periodic_status: true,
-        });
-        console.log(periodic);
-        res.status(200).json(periodic);
-      }
+        role === "Super Admin " || role === "Group Admin"
+          ? req.query.company_id
+          : req.admin.company_id;
+      // if (req.admin.role === "Super Admin" || req.admin.role === "App Admin") {
+      const periodic = await Periodic.findOne({
+        company_id,
+        periodic_status: true,
+      });
+      // console.log(periodic);
+      res.status(200).json(periodic);
+      // }
     } catch (error) {
       return res
         .status(500)

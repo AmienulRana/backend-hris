@@ -3,6 +3,21 @@ const fs = require("fs");
 const Salary = require("../salary/model");
 const Company = require("../company/model");
 const Shift = require("../workshift/model");
+const LeaveRequest = require("../leave-request/model");
+const OvertimeRequest = require("../overtime-request/model");
+const OutsideRequest = require("../outside-request/model");
+const ChangeWorkshift = require("../emp-change-workshift/model");
+const ChangeOffDay = require("../off-day/model");
+const Warning = require("../emp-warning/model");
+const Attendance = require("../attedance/model");
+const Payroll = require("../payrun/model");
+const Experience = require("../experience/model");
+const Allowance = require("../emp-allowance/model");
+const Deduction = require("../emp-deduction/model");
+const Education = require("../education/model");
+const Bank = require("../bank/model");
+const { calculateAttendanceAbsent } = require("../corn/index");
+const { dateToday, getDayName } = require("../attedance/controller");
 
 module.exports = {
   addEmployement: async (req, res) => {
@@ -35,27 +50,32 @@ module.exports = {
       const checkDuplicateEmail = await Employment.findOne({ email });
       const checkDuplicateNIKKtp = await Employment.findOne({ emp_nikktp });
       const checkDuplicateUsername = await Employment.findOne({ username });
-      if (checkDuplicateEmail) {
-        return res.status(422).json({
-          message: `${email} has been used, please select another email`,
-        });
-      }
-      if (checkDuplicateNIKKtp) {
-        return res.status(422).json({
-          message: `NIK KTP should not be duplicate, please enter another NIK KTP`,
-        });
-      }
+      // if (!email) {
+      //   return res.status(422).json({
+      //     message: `Email is Required`,
+      //   });
+      // }
+      // if (checkDuplicateEmail) {
+      //   return res.status(422).json({
+      //     message: `${email} has been used, please select another email`,
+      //   });
+      // }
+      // if (checkDuplicateNIKKtp) {
+      //   return res.status(422).json({
+      //     message: `NIK KTP should not be duplicate, please enter another NIK KTP`,
+      //   });
+      // }
       if (checkDuplicateUsername) {
         return res.status(422).json({
           message: `${username} has been used, please select another username`,
         });
       }
-
+      const company_id =
+        role === "Super Admin " || role === "Group Admin"
+          ? req.query.company
+          : req.admin.company_id;
       const newEmployment = new Employment({
-        company_id:
-          role === "Super Admin"
-            ? req.query.company
-            : role === "App Admin" && req.admin.company_id,
+        company_id,
         emp_profile: req.file ? req.file?.filename : null,
         username,
         password,
@@ -76,16 +96,59 @@ module.exports = {
         emp_fsuperior,
         emp_ssuperior,
         emp_location,
+        emp_tanggungan,
         emp_attadance: JSON.parse(attadance),
       });
       await newEmployment.save().then(async (emp) => {
-        if (basic_salary.emp_salary && basic_salary.emp_periode) {
+        if (parsingtoJson?.emp_salary) {
           const salary = new Salary({ ...parsingtoJson, emp_id: emp._id });
-          await salary.save();
+          await salary
+            .save()
+            .then(() => console.log("success added salary"))
+            .catch((err) => console.log(err));
+        }
+        const chekcAttendanceToday = await Attendance.findOne({
+          emp_id: emp?._id,
+          attendance_date: dateToday(),
+        });
+        const findEmployment = await Employment.findOne({
+          _id: emp?._id,
+        }).populate({
+          path: `emp_attadance.${[getDayName()]}.shift`,
+        });
+        if (!chekcAttendanceToday) {
+          const employmentShiftToday =
+            findEmployment?.emp_attadance[getDayName()];
+
+          const payload = {
+            company_id: findEmployment?.company_id,
+            emp_id: findEmployment?._id,
+            insert_databy: "Has_Attendance",
+            shift_id: employmentShiftToday?.shift?._id || "",
+            workhours_in: employmentShiftToday?.shift?.shift_clockin,
+            workhours_out: employmentShiftToday?.shift?.shift_clockout,
+            clock_in: "-",
+            clock_out: "-",
+            break_in: "-",
+            break_out: "-",
+            attendance_date: dateToday(),
+            workhours: "-",
+            behavior_break: "-",
+            count_lateduration: 0,
+            count_breakduration: 0,
+            attendance_status: `Absent`,
+            type: "Auto",
+            behavior_at: "-",
+            attendance_deduction: await calculateAttendanceAbsent(emp),
+            break_deduction: 0,
+          };
+          const attendance = new Attendance(payload);
+          await attendance
+            .save()
+            .then(() => console.log("berhasil menambahkan attedance karyawan"));
         }
       });
       return res.json({ message: "Successfully created a new Employment" });
-      // return res.status(500).json({ message: "Failed to Add new Employment" });
     } catch (error) {
       console.log(error);
       if (req?.file) {
@@ -98,42 +161,62 @@ module.exports = {
   },
   getEmployment: async (req, res) => {
     try {
-      const company_id = req?.admin?.company_id;
-      if (req.admin.role === "Super Admin") {
-        const company_id = req.query.company;
-        if (company_id) {
-          const employment = await Employment.find({
-            company_id,
-          })
-            .select(
-              "company_id emp_fullname emp_desid emp_depid emp_status emp_profile"
-            )
-            .populate({ path: "company_id", select: "company_name" })
-            .populate({ path: "emp_depid", select: "dep_name dep_workshift" })
-            .populate({
-              path: "emp_status",
-              select: "empstatus_name empstatus_color",
-            })
-            .populate({ path: "emp_desid", select: "des_name" });
-          return res.status(200).json(employment);
-        }
-        return res.status(200).json([]);
-      }
-      if (company_id) {
-        const employment = await Employment.find({ company_id })
-          .select("company_id emp_fullname emp_desid emp_depid emp_status ")
-          .populate({ path: "company_id", select: "company_name" })
-          .populate({ path: "emp_depid", select: "dep_name dep_workshift" })
-          .populate({
-            path: "emp_status",
-            select: "empstatus_name empstatus_color",
-          })
-          .populate({ path: "emp_desid", select: "des_name" });
-        return res.status(200).json(employment);
-      }
+      const { role } = req.admin;
+      const company_id =
+        role === "Super Admin " || role === "Group Admin"
+          ? req.query.company
+          : req.admin.company_id;
+      const employment = await Employment.find({
+        company_id,
+      })
+        .select(
+          "company_id emp_fullname emp_desid emp_depid emp_status emp_profile"
+        )
+        .populate({ path: "company_id", select: "company_name" })
+        .populate({ path: "emp_depid", select: "dep_name dep_workshift" })
+        .populate({
+          path: "emp_status",
+          select: "empstatus_name empstatus_color",
+        })
+        .populate({ path: "emp_desid", select: "des_name" });
+      return res.status(200).json(employment);
     } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "Failed to Get Designation" });
+      res.status(500).json({ message: "Failed to Get Employment" });
+    }
+  },
+  deleteEmployment: async (req, res) => {
+    try {
+      const { role } = req.admin;
+      const company_id =
+        role === "Super Admin " || role === "Group Admin"
+          ? req.query.company
+          : req.admin.company_id;
+      const employment = await Employment.deleteOne({
+        _id: req.params.id,
+      });
+      if (employment?.deletedCount > 0) {
+        await LeaveRequest.deleteMany({ emp_id: req.params.id });
+        await OvertimeRequest.deleteMany({ emp_id: req.params.id });
+        await OutsideRequest.deleteMany({ emp_id: req.params.id });
+        await ChangeWorkshift.deleteMany({ emp_id: req.params.id });
+        await ChangeOffDay.deleteMany({ emp_id: req.params.id });
+        await Warning.deleteMany({ emp_id: req.params.id });
+        await Education.deleteMany({ emp_id: req.params.id });
+        await Experience.deleteMany({ emp_id: req.params.id });
+        await Attendance.deleteMany({ emp_id: req.params.id });
+        await Deduction.deleteMany({ emp_id: req.params.id });
+        await Allowance.deleteMany({ emp_id: req.params.id });
+        await Bank.deleteMany({ emp_id: req.params.id });
+        await Payroll.deleteMany({ emp_id: req.params.id });
+        await Salary.deleteMany({ emp_id: req.params.id });
+        return res
+          .status(200)
+          .json({ message: "Sucessfully Deleted Employment" });
+      }
+      // return res.status(200).json(employment);
+      return res.status(422).json({ message: "Failed to Delete Employment" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to Delete Employment" });
     }
   },
   detailEmployment: async (req, res) => {
@@ -153,11 +236,12 @@ module.exports = {
           path: "emp_status",
           select: "empstatus_name empstatus_color",
         })
-        .populate({ path: "emp_desid", select: "des_name" });
+        .populate({ path: "emp_desid", select: "des_name" })
+        .populate({ path: "emp_location", select: "loc_name _id" });
       return res.status(200).json(employment);
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: "Failed to Get Designation" });
+      res.status(500).json({ message: "Failed to Get Employment" });
     }
   },
   editPesonalDetail: async (req, res) => {
@@ -249,6 +333,24 @@ module.exports = {
       return res.status(500).json({ message: "Failed to Update Employment" });
     }
   },
+  uploadPhoto: async (req, res) => {
+    try {
+      console.log(req.files);
+      if (req.files.length > 0) {
+        return res.status(200).json({
+          message: "Successfully upload files",
+          data: req.files.map((file) => file?.filename),
+        });
+      } else {
+        return res.status(422).json({ message: "No files uploaded" });
+      }
+    } catch (error) {
+      if (req?.file) {
+        fs.unlinkSync(`public/uploads/${req.file.filename}`);
+      }
+      return res.status(500).json({ message: "Failed to upload files" });
+    }
+  },
   editEmploymentDetail: async (req, res) => {
     try {
       const { role } = req.admin;
@@ -329,8 +431,11 @@ module.exports = {
     try {
       const { role } = req.admin;
       const { id } = req.params;
-      if (role === "Super Admin" || "App Admin") {
-        console.log(req.body);
+      if (
+        role === "Super Admin" ||
+        role === "App Admin" ||
+        role === "Group Admin"
+      ) {
         const newEmployment = await Employment.updateOne(
           { _id: id },
           {
@@ -372,6 +477,84 @@ module.exports = {
       return res
         .status(500)
         .json({ message: "Failed to get all Shift your company" });
+    }
+  },
+  changeProfile: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { role } = req.admin;
+
+      const updateProfile = await Employment.updateOne(
+        { _id: id },
+        {
+          $set: {
+            emp_profile: req?.file?.filename,
+          },
+        }
+      );
+      console.log(id);
+      return res
+        .status(200)
+        .json({ message: "Successfully to update profile" });
+    } catch (error) {
+      console.log(error);
+      if (req?.file) {
+        fs.unlinkSync(`public/uploads/${req.file.filename}`);
+      }
+      return res.status(500).json({ message: "Failed to upload profile" });
+    }
+  },
+  editStatus: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateStatus = await Employment.updateOne(
+        { _id: id },
+        {
+          $set: {
+            ...req.body,
+          },
+        }
+      );
+      if (updateStatus?.modifiedCount > 0) {
+        return res.status(200).json({ message: "Succesfully edit status" });
+      }
+      return res
+        .status(422)
+        .json({ message: "Opps No field change, Please try again!" });
+    } catch (error) {
+      return res.status(500).json({ message: "Failed edit status" });
+    }
+  },
+  resetPassword: async (req, res) => {
+    try {
+      const { role } = req.admin;
+      const { id } = req.params;
+      if (
+        role === "Super Admin" ||
+        role === "App Admin" ||
+        role === "Group Admin"
+      ) {
+        const updateStatus = await Employment.updateOne(
+          { _id: id },
+          {
+            $set: {
+              ...req.body,
+            },
+          }
+        );
+        if (updateStatus?.modifiedCount > 0) {
+          return res
+            .status(200)
+            .json({ message: "Succesfully Reset Password" });
+        }
+        return res
+          .status(422)
+          .json({ message: "Opps No field change, Please try again!" });
+      }
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ message: "Failed Reset Password Employment" });
     }
   },
 };

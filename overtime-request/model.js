@@ -10,6 +10,9 @@ const overtimeSchema = mongoose.Schema({
     ref: "Employmeent",
     required: [true, "Please Select one employment"],
   },
+  overtime_created: {
+    type: String,
+  },
   overtime_date: {
     type: String,
     required: [true, "Overtime Date required"],
@@ -28,6 +31,9 @@ const overtimeSchema = mongoose.Schema({
   overtime_reason: {
     type: String,
     required: [true, "Overtime Reason required"],
+  },
+  overtime_amount: {
+    type: Number,
   },
   overtime_fsuperior: {
     fsuperior_id: {

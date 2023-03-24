@@ -7,7 +7,12 @@ const {
   editPesonalDetail,
   editEmploymentDetail,
   editWorkShift,
+  uploadPhoto,
   getAllWorkShiftEmployment,
+  changeProfile,
+  deleteEmployment,
+  editStatus,
+  resetPassword,
 } = require("./controller");
 const router = express.Router();
 const path = require("path");
@@ -33,26 +38,42 @@ const fileFilter = (req, file, cb) => {
   if (
     typeFile === "image/png" ||
     typeFile === "image/jpg" ||
-    typeFile === "image/jpeg"
+    typeFile === "image/jpeg" ||
+    typeFile ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    typeFile ===
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+    typeFile === "application/pdf"
   ) {
     cb(null, true);
   } else {
     cb(null, false);
-    new Error("Yang anda upload bukan gambar!");
+    new Error("Cannot Uploded file!");
   }
 };
 
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 1000000 },
+  limits: { fileSize: 4000000 },
 });
+
+router.post("/upload", upload.array("files", 5), uploadPhoto);
 
 router.post("/", authenticationToken, upload.single("profile"), addEmployement);
 router.get("/", authenticationToken, getEmployment);
 router.get("/:id", authenticationToken, detailEmployment);
+router.delete("/:id", authenticationToken, deleteEmployment);
 router.put("/personal-detail/:id", authenticationToken, editPesonalDetail);
+router.put("/status/:id", authenticationToken, editStatus);
+router.put("/reset/:id", authenticationToken, resetPassword);
 router.put("/employment-detail/:id", authenticationToken, editEmploymentDetail);
 router.put("/employment-workshift/:id", authenticationToken, editWorkShift);
+router.put(
+  "/profile/:id",
+  authenticationToken,
+  upload.single("profile"),
+  changeProfile
+);
 router.get("/workshift/:id", getAllWorkShiftEmployment);
 module.exports = router;

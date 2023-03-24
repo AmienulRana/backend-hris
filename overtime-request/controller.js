@@ -1,6 +1,8 @@
 const OvertimeRequest = require("./model");
 const Employment = require("../employee/model");
-const { populate } = require("./model");
+const Salary = require("../salary/model");
+const { getFormattedDateTime } = require("../leave-request/controller");
+const Request = require("../request/model");
 
 function formatHours(jam, menit) {
   return `${jam < 10 ? "0" + jam.toString() : jam.toString()}:${
@@ -18,6 +20,30 @@ function getDurationOvertime(start_hours, end_hours) {
 
   return formatHours(hour, minute);
 }
+
+async function getTotalOvertimeAmount(emp_id, start_hours, end_hours) {
+  const totalHours = +getDurationOvertime(start_hours, end_hours).split(":")[0];
+  const salary = await Salary.findOne({ emp_id });
+  if (salary) {
+    console.log(salary);
+    const overtimeAmount =
+      (salary?.emp_salary /
+        salary?.emp_working_days /
+        salary?.emp_working_hours) *
+      totalHours;
+    return overtimeAmount;
+  }
+  return 1;
+}
+
+function getFormattedDate() {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 module.exports = {
   addOvertimeRequest: async (req, res) => {
     try {
@@ -40,6 +66,12 @@ module.exports = {
           overtime_start_hours,
           overtime_end_hours
         ),
+        overtime_amount: await getTotalOvertimeAmount(
+          emp_id,
+          overtime_start_hours,
+          overtime_end_hours
+        ),
+        overtime_created: getFormattedDate(),
         overtime_fsuperior: { fsuperior_id: employement?.emp_fsuperior },
         overtime_ssuperior: {
           ssuperior_id: employement.emp_ssuperior
@@ -47,64 +79,115 @@ module.exports = {
             : employement?.emp_fsuperior,
         },
       };
-      console.log(payload);
       const overtimeRequest = new OvertimeRequest(payload);
-      await overtimeRequest.save();
+      await overtimeRequest.save().then(async (overtime) => {
+        const request = new Request({
+          company_id: employement?.company_id,
+          request_data_id: overtime?._id,
+          request_type: "Overtime",
+          request_datetime: getFormattedDateTime(),
+        });
+        await request.save();
+      });
       return res
         .status(200)
         .json({ message: "Successfully added Request Leave" });
     } catch (error) {
-      console.log(error.message);
-      if (error?.message) {
-        return res.status(500).json({ message: error.message });
-      }
       return res
         .status(500)
         .json({ message: "Failed to added Request Leave | Server Error" });
+    }
+  },
+  editDataOvertimeRequest: async (req, res) => {
+    try {
+      const {
+        emp_id,
+        overtime_reason,
+        overtime_date,
+        overtime_start_hours,
+        overtime_end_hours,
+      } = req.body;
+      const payload = {
+        emp_id,
+        overtime_date,
+        overtime_end_hours,
+        overtime_start_hours,
+        overtime_reason,
+        overtime_duration: getDurationOvertime(
+          overtime_start_hours,
+          overtime_end_hours
+        ),
+        overtime_amount: await getTotalOvertimeAmount(
+          emp_id,
+          overtime_start_hours,
+          overtime_end_hours
+        ),
+      };
+      const overtimeRequest = await OvertimeRequest.updateOne(
+        { _id: req.params.id },
+        {
+          $set: {
+            ...payload,
+          },
+        }
+      );
+      if (overtimeRequest.modifiedCount > 0) {
+        return res
+          .status(200)
+          .json({ message: "Successfully edited Request Leave" });
+      } else {
+        return res
+          .status(500)
+          .json({ message: "Failed to edited Request Leave" });
+      }
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ message: "Failed to edited Request Leave | Server Error" });
     }
   },
   getOvertimeRequest: async (req, res) => {
     try {
       const { role } = req.admin;
       const company_id =
-        role === "Super Admin"
-          ? req?.query?.company_id
-          : req?.admin?.company_id;
-      if (req.admin.role === "Super Admin" || req.admin.role === "App Admin") {
-        const overtimeRequest = await OvertimeRequest.find({
-          company_id,
+        role === "Super Admin " || role === "Group Admin"
+          ? req.query.company_id
+          : req.admin.company_id;
+      // if (req.admin.role === "Super Admin" || req.admin.role === "App Admin") {
+      const overtimeRequest = await OvertimeRequest.find({
+        company_id,
+      })
+        .populate({
+          path: "emp_id",
+          select: "emp_fullname _id emp_depid",
+          populate: {
+            path: "emp_depid",
+            select: "dep_name",
+          },
         })
-          .populate({
+        .populate({
+          path: "company_id",
+          select: "company_name",
+        })
+        .populate({
+          path: "overtime_fsuperior.fsuperior_id",
+          select: "des_name emp_id",
+          populate: {
             path: "emp_id",
-            select: "emp_fullname _id emp_depid",
-            populate: {
-              path: "emp_depid",
-              select: "dep_name",
-            },
-          })
-          .populate({
-            path: "company_id",
-            select: "company_name",
-          })
-          .populate({
-            path: "overtime_fsuperior.fsuperior_id",
-            select: "des_name emp_id",
-            populate: {
-              path: "emp_id",
-              select: "emp_fullname",
-            },
-          })
-          .populate({
-            path: "overtime_ssuperior.ssuperior_id",
-            select: "des_name emp_id",
-            populate: {
-              path: "emp_id",
-              select: "emp_fullname",
-            },
-          });
+            select: "emp_fullname",
+          },
+        })
+        .populate({
+          path: "overtime_ssuperior.ssuperior_id",
+          select: "des_name emp_id",
+          populate: {
+            path: "emp_id",
+            select: "emp_fullname",
+          },
+        });
 
-        res.status(200).json(overtimeRequest);
-      }
+      res.status(200).json(overtimeRequest);
+      // }
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Failed to Get Departement" });
@@ -112,7 +195,6 @@ module.exports = {
   },
   editOvertimeRequest: async (req, res) => {
     try {
-      console.log(req.body);
       const { overtime_fsuperior, overtime_ssuperior, overtime_hr } = req.body;
       const findOvertime = await OvertimeRequest.findOne({
         _id: req.params.id,
@@ -180,6 +262,32 @@ module.exports = {
       return res
         .status(500)
         .json({ message: "Failed to added Request Leave | Server Error" });
+    }
+  },
+  deleteOvertimeRequest: async (req, res) => {
+    try {
+      const overtimeRequest = await OvertimeRequest.deleteOne({
+        _id: req.params.id,
+      });
+      if (overtimeRequest.deletedCount > 0) {
+        await Request.deleteOne({ request_data_id: req.params.id });
+
+        return res
+          .status(200)
+          .json({ message: "Successfully deleted Request Leave" });
+      } else {
+        return res
+          .status(500)
+          .json({ message: "Failed to deleted Request Leave" });
+      }
+    } catch (error) {
+      console.log(error);
+      if (error?.message) {
+        return res.status(500).json({ message: error.message });
+      }
+      return res
+        .status(500)
+        .json({ message: "Failed to deleted Request Leave" });
     }
   },
 };

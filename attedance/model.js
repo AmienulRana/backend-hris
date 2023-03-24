@@ -17,9 +17,13 @@ const AttedanceSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  attendance_date_out: {
+    type: String,
+  },
   shift_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "shift",
+    required: false,
   },
   workhours: {
     type: String,
@@ -46,7 +50,7 @@ const AttedanceSchema = mongoose.Schema({
     emun: ["Regular", "Late", "Early"],
   },
   count_lateduration: {
-    type: String,
+    type: Number,
   },
   type: {
     type: String,
@@ -62,12 +66,19 @@ const AttedanceSchema = mongoose.Schema({
     emun: ["Regular", "Late", "Early"],
   },
   count_breakduration: {
-    type: String,
+    type: Number,
   },
   attendance_status: {
     type: String,
   },
+  delay_deduction: {
+    type: Number,
+    default: 0,
+  },
   attendance_deduction: {
+    type: Number,
+  },
+  break_deduction: {
     type: Number,
   },
   orther_break_id: {

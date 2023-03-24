@@ -39,7 +39,6 @@ module.exports = {
             : employement?.emp_fsuperior,
         },
       };
-      console.log(payload);
       const overtimeRequest = new OvertimeRequest(payload);
       await overtimeRequest.save();
       return res
@@ -55,48 +54,88 @@ module.exports = {
         .json({ message: "Failed to added Request Outside | Server Error" });
     }
   },
+  editDataOvertimeRequest: async (req, res) => {
+    try {
+      const { emp_id, outside_reason, outside_start_date, outside_end_date } =
+        req.body;
+      const employement = await Employment.findOne({ _id: emp_id });
+      const payload = {
+        company_id: employement?.company_id,
+        emp_id,
+        outside_reason,
+        outside_start_date,
+        outside_end_date,
+        outside_duration: getDurationOutside(
+          outside_start_date,
+          outside_end_date
+        ),
+      };
+      const overtimeRequest = await OvertimeRequest.updateOne(
+        { _id: req.params.id },
+        {
+          $set: {
+            ...payload,
+          },
+        }
+      );
+      if (overtimeRequest.modifiedCount > 0) {
+        return res
+          .status(200)
+          .json({ message: "Successfully edited Request Outside" });
+      } else {
+        return res
+          .status(422)
+          .json({ message: "Failed to edited Request Outside" });
+      }
+    } catch (error) {
+      console.log(error.message);
+      return res
+        .status(500)
+        .json({ message: "Failed to edited Request Outside" });
+    }
+  },
   getOvertimeRequest: async (req, res) => {
     try {
       const { role } = req.admin;
       const company_id =
-        role === "Super Admin"
-          ? req?.query?.company_id
-          : req?.admin?.company_id;
-      if (req.admin.role === "Super Admin" || req.admin.role === "App Admin") {
-        const overtimeRequest = await OvertimeRequest.find({
-          company_id,
+        role === "Super Admin " || role === "Group Admin"
+          ? req.query.company_id
+          : req.admin.company_id;
+      // if (req.admin.role === "Super Admin" || req.admin.role === "App Admin") {
+      const overtimeRequest = await OvertimeRequest.find({
+        company_id,
+      })
+        .populate({
+          path: "emp_id",
+          select: "emp_fullname _id emp_depid",
+          populate: {
+            path: "emp_depid",
+            select: "dep_name",
+          },
         })
-          .populate({
+        .populate({
+          path: "company_id",
+          select: "company_name",
+        })
+        .populate({
+          path: "outside_fsuperior.fsuperior_id",
+          select: "des_name emp_id",
+          populate: {
             path: "emp_id",
-            select: "emp_fullname _id emp_depid",
-            populate: {
-              path: "emp_depid",
-              select: "dep_name",
-            },
-          })
-          .populate({
-            path: "company_id",
-            select: "company_name",
-          })
-          .populate({
-            path: "outside_fsuperior.fsuperior_id",
-            select: "des_name emp_id",
-            populate: {
-              path: "emp_id",
-              select: "emp_fullname",
-            },
-          })
-          .populate({
-            path: "outside_ssuperior.ssuperior_id",
-            select: "des_name emp_id",
-            populate: {
-              path: "emp_id",
-              select: "emp_fullname",
-            },
-          });
+            select: "emp_fullname",
+          },
+        })
+        .populate({
+          path: "outside_ssuperior.ssuperior_id",
+          select: "des_name emp_id",
+          populate: {
+            path: "emp_id",
+            select: "emp_fullname",
+          },
+        });
 
-        res.status(200).json(overtimeRequest);
-      }
+      res.status(200).json(overtimeRequest);
+      // }
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Failed to Get Outside Request" });
@@ -104,7 +143,6 @@ module.exports = {
   },
   editOvertimeRequest: async (req, res) => {
     try {
-      console.log(req.body);
       const { outside_fsuperior, outside_ssuperior, outside_hr } = req.body;
       const findOvertime = await OvertimeRequest.findOne({
         _id: req.params.id,
@@ -162,7 +200,7 @@ module.exports = {
       if (overtimeRequest.modifiedCount > 0) {
         return res
           .status(200)
-          .json({ message: "Successfully edit status overtime" });
+          .json({ message: "Successfully edit status outside" });
       }
     } catch (error) {
       console.log(error.message);
@@ -171,7 +209,32 @@ module.exports = {
       }
       return res
         .status(500)
-        .json({ message: "Failed to edit status overtime | Server Error" });
+        .json({ message: "Failed to edit status outisde | Server Error" });
+    }
+  },
+  deleteOvertimeRequest: async (req, res) => {
+    try {
+      const overtimeRequest = await OvertimeRequest.deleteOne({
+        _id: req.params.id,
+      });
+
+      if (overtimeRequest.deletedCount > 0) {
+        return res
+          .status(200)
+          .json({ message: "Successfully deleted  Outside Request" });
+      } else {
+        return res
+          .status(500)
+          .json({ message: "Failed to deleted  Outside Request " });
+      }
+    } catch (error) {
+      console.log(error.message);
+      if (error?.message) {
+        return res.status(500).json({ message: error.message });
+      }
+      return res
+        .status(500)
+        .json({ message: "Failed to deleted  Outside Request " });
     }
   },
 };

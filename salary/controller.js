@@ -11,7 +11,11 @@ module.exports = {
         emp_id,
       } = req.body;
       const { role } = req.admin;
-      if (role === "Super Admin" || role === "App Admin") {
+      if (
+        role === "Super Admin" ||
+        role === "App Admin" ||
+        role === "Group Admin"
+      ) {
         const findSalary = await Salary.findOne({ emp_id });
         if (findSalary) {
           const salary = await Salary.updateOne(
@@ -55,7 +59,11 @@ module.exports = {
         req.body;
       const { role } = req.admin;
       const { id } = req.params;
-      if (role === "Super Admin" || role === "App Admin") {
+      if (
+        role === "Super Admin" ||
+        role === "App Admin" ||
+        role === "Group Admin"
+      ) {
         const salary = await Salary.updateOne(
           { _id: id },
           {
@@ -82,15 +90,18 @@ module.exports = {
     try {
       const emp_id = req?.query?.emp_id;
       const { role } = req.admin;
-      if (role === "Super Admin" || role === "App Admin") {
-        const salary = await Salary.findOne({
-          emp_id,
-        });
-        if (salary) {
-          res.status(200).json(salary);
-        } else {
-          res.status(404).json({ message: "Can't find salary" });
-        }
+      // if (
+      //   role === "Super Admin" ||
+      //   role === "App Admin" ||
+      //   role === "Group Admin"
+      // ) {
+      const salary = await Salary.findOne({
+        emp_id,
+      });
+      if (salary) {
+        res.status(200).json(salary);
+      } else {
+        res.status(404).json({ message: "Can't find salary" });
       }
     } catch (error) {
       console.log(error);
@@ -101,7 +112,11 @@ module.exports = {
     try {
       const { role } = req.admin;
       const { id } = req.params;
-      if (role === "Super Admin" || role === "App Admin") {
+      if (
+        role === "Super Admin" ||
+        role === "App Admin" ||
+        role === "Group Admin"
+      ) {
         const salary = await Salary.deleteOne({ _id: id });
         if (salary.deletedCount > 0) {
           return res

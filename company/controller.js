@@ -3,24 +3,63 @@ const bcrypt = require("bcrypt");
 const generate_token = require("../utils/generateToken");
 const Employment = require("../employee/model");
 const Departement = require("../departement/model");
+const Designation = require("../designations/model");
+const Status = require("../emp-status/model");
+const mongoose = require("mongoose");
+const Leave = require("../leave-request/model");
 
 const validator = (value) => {
   return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/.test(value);
 };
 
-async function TotalStatusEmplyoment() {
-  const employment = await Employment.find();
-  const status = ["Permanent", "Probation", "Contract"];
-
+async function TotalStatusEmplyoment(company_id) {
+  const employment = await Employment.find({ company_id });
+  const status = await Status.find({ company_id });
   const result = [];
   for (let i = 0; i < status.length; i++) {
     let total = 0;
     for (let j = 0; j < employment.length; j++) {
-      if (employment[j].emp_status === status[i]) {
+      if (employment[j]?.emp_status.equals(status[i]?._id)) {
         total += 1;
       }
     }
-    result.push({ status: status[i], total_employment: total });
+    result.push({ status: status[i]?.empstatus_name, total_employment: total });
+  }
+  return result;
+}
+async function TotalDepartementEmplyoment(company_id) {
+  const employment = await Employment.find({ company_id });
+  const departement = await Departement.find({ company_id });
+  const result = [];
+  for (let i = 0; i < departement.length; i++) {
+    let total = 0;
+    for (let j = 0; j < employment.length; j++) {
+      if (employment[j]?.emp_depid?.equals(departement[i]?._id)) {
+        total += 1;
+      }
+    }
+    result.push({
+      departement: departement[i]?.dep_name,
+      total_departement: total,
+    });
+  }
+  return result;
+}
+async function TotalDesignationEmplyoment(company_id) {
+  const employment = await Employment.find({ company_id });
+  const designation = await Designation.find({ company_id });
+  const result = [];
+  for (let i = 0; i < designation.length; i++) {
+    let total = 0;
+    for (let j = 0; j < employment.length; j++) {
+      if (employment[j]?.emp_desid?.equals(designation[i]?._id)) {
+        total += 1;
+      }
+    }
+    result.push({
+      designation: designation[i]?.des_name,
+      total_designation: total,
+    });
   }
   return result;
 }
@@ -28,56 +67,125 @@ async function TotalStatusEmplyoment() {
 module.exports = {
   registerCompany: async (req, res) => {
     try {
-      let { company_email, company_password, company_name } = req.body;
-      const checkDuplicateEmail = await Company.findOne({ company_email });
-      if (checkDuplicateEmail) {
-        return res.status(422).json({ message: "Your email has been used" });
-      }
-      const checkDuplicateName = await Company.findOne({ company_name });
-      if (checkDuplicateName) {
-        return res
-          .status(422)
-          .json({ message: "Your company name has been created" });
-      }
-      if (validator(company_password)) {
-        company_password = bcrypt.hashSync(company_password, 10);
-        const company = new Company({
-          company_email,
-          company_password,
-          company_name,
-          role: "App Admin",
-        });
-        company
-          .save()
-          .then(() => {
-            return res.status(200).json({
-              message:
-                "Registration is successful, Login to start your session",
-            });
-          })
-          .catch((err) => {
-            console.log(err);
-            res.status(400).json({ message: "Registrasi failed" });
+      // const checkDuplicateEmail = await Company.findOne({ company_email });
+      // if (checkDuplicateEmail) {
+      //   return res.status(422).json({ message: "Your email has been used" });
+      // }
+      // const checkDuplicateName = await Company.findOne({ company_name });
+      // if (checkDuplicateName) {
+      //   return res
+      //     .status(422)
+      //     .json({ message: "Your company name has been created" });
+      // }
+      // if (validator(company_password)) {
+      //   company_password = bcrypt.hashSync(company_password, 10);
+      const company = new Company({
+        role: "App Admin",
+        ...req.body,
+      });
+      company
+        .save()
+        .then(() => {
+          return res.status(200).json({
+            message: "Successfully Added new Company",
           });
-      } else {
-        return res.status(400).json({
-          message:
-            "Password must contain 1 lowercase letter [a-z], 1 uppercase letter [A-Z], 1 number [0-9]",
+        })
+        .catch((err) => {
+          console.log(err);
+          res.status(400).json({ message: "Failed Added new Company" });
         });
+    } catch (error) {
+      res.status(400).json({ message: "Failed Added new Company" });
+    }
+  },
+  editCompany: async (req, res) => {
+    try {
+      // const checkDuplicateEmail = await Company.findOne({ company_email });
+      // if (checkDuplicateEmail) {
+      //   return res.status(422).json({ message: "Your email has been used" });
+      // }
+      // const checkDuplicateName = await Company.findOne({ company_name });
+      // if (checkDuplicateName) {
+      //   return res
+      //     .status(422)
+      //     .json({ message: "Your company name has been created" });
+      // }
+      // if (validator(company_password)) {
+      let { company_password } = req.body;
+      if (company_password) {
+        company_password = bcrypt.hashSync(company_password, 10);
+        const company = await Company.updateOne(
+          { _id: req.params.id },
+          {
+            $set: {
+              ...req.body,
+              company_password,
+            },
+          }
+        );
+        if (company.modifiedCount > 0) {
+          return res.status(200).json({
+            message: "Successfully Edited Company",
+          });
+        } else {
+          res
+            .status(400)
+            .json({ message: "Failed Edit company | No data changed" });
+        }
+      } else {
+        const company = await Company.updateOne(
+          { _id: req.params.id },
+          {
+            $set: {
+              ...req.body,
+            },
+          }
+        );
+        if (company.modifiedCount > 0) {
+          return res.status(200).json({
+            message: "Successfully Edited Company",
+          });
+        } else {
+          res
+            .status(400)
+            .json({ message: "Failed Edit company | No data changed" });
+        }
       }
     } catch (error) {
       console.log(error);
+      res
+        .status(500)
+        .json({ message: "Failed Edit company | Internal Server error" });
+    }
+  },
+  deleteCompany: async (req, res) => {
+    try {
+      const company = await Company.deleteOne({ _id: req.params.id });
+      if (company.deletedCount > 0) {
+        return res.status(200).json({
+          message: "Successfully Deleted Company",
+        });
+      } else {
+        res.status(400).json({ message: "Failed Delete Company" });
+      }
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "Failed Delete Company | Internal Server error" });
     }
   },
   loginCompany: async (req, res) => {
     try {
       const { email, password } = req.body;
-
-      const company = await Company.findOne({ email });
+      const company = await Company.findOne({ company_email: email });
       if (company) {
         const data = {
           company_id: company?._id,
-          email: company?.email,
+          company_name: company?.company_name,
+          company_header: company?.company_header
+            ? company?.company_header
+            : null,
+          email: company?.company_email,
           role: company?.role,
         };
         const cek_password = bcrypt.compareSync(
@@ -94,16 +202,33 @@ module.exports = {
           message: "Authentication sukses",
           token,
         });
+      } else {
+        return res
+          .status(401)
+          .json({ message: "Your password or email maybe wrong" });
       }
-      return error(res, 401, "Your password or email maybe wrong");
     } catch (error) {
       console.log(error);
     }
   },
   getAllCompany: async (req, res) => {
     try {
-      const company = await Company.find().select("_id company_name");
-      return res.status(200).json(company);
+      const { role } = req.admin;
+      if (role === "Group Admin") {
+        const company = await Company.find({
+          company_group: "Mufidah Group",
+        }).select(
+          "_id company_name company_group company_longtitude company_latitude company_zone company_status company_header"
+        );
+        return res.status(200).json(company);
+      } else if (role === "Super Admin") {
+        const company = await Company.find().select(
+          "_id company_name company_group company_longtitude company_latitude company_zone company_status company_header"
+        );
+        return res.status(200).json(company);
+      } else if (role !== "Super Admin" || role !== "Group Admin") {
+        return res.status(200).json([]);
+      }
     } catch (error) {
       console.log(error);
     }
@@ -112,16 +237,26 @@ module.exports = {
     try {
       const { role } = req.admin;
       const company_id =
-        role === "Super Admin"
+        role === "Super Admin " || role === "Group Admin"
           ? req.query.company
-          : role === "App Admin" && req.admin.company_id;
+          : req.admin.company_id;
       const employment = (await Employment.find({ company_id })).length;
       const departement = (await Departement.find({ company_id })).length;
-      const statistic_employment = await TotalStatusEmplyoment();
+      const leave = (await Leave.find({ company_id })).length;
+      const statistic_employment = await TotalStatusEmplyoment(company_id);
+      const departement_statistic = await TotalDepartementEmplyoment(
+        company_id
+      );
+      const designation_statistic = await TotalDesignationEmplyoment(
+        company_id
+      );
       return res.status(200).json({
         total_employment: employment,
+        total_leave: leave,
         total_departement: departement,
         employment_status: statistic_employment,
+        departement_statistic,
+        designation_statistic,
       });
     } catch (error) {
       console.log(error);

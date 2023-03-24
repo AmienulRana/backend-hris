@@ -10,7 +10,10 @@ const LeaveRequestSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Employmeent",
   },
-  empleave_type_id: { type: String, required: true },
+  empleave_type_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "leave_setting",
+  },
   empleave_leave_type: {
     type: String,
     required: true,
@@ -45,6 +48,59 @@ const LeaveRequestSchema = new Schema({
     type: String,
     enum: ["Approved", "Pending", "Rejected"],
     default: "Pending",
+  },
+  empleave_fsuperior: {
+    fsuperior_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Designation",
+    },
+    status: {
+      type: String,
+      enum: ["Approved", "Rejected", "Not Approved", "Pending"],
+      default: "Pending",
+    },
+    approved_by: {
+      type: String,
+    },
+    approved_date: {
+      type: String,
+    },
+    approved_hours: {
+      type: String,
+    },
+  },
+  empleave_ssuperior: {
+    ssuperior_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Designation",
+    },
+    status: {
+      type: String,
+      enum: ["Approved", "Rejected", "Not Approved", "Pending"],
+      default: "Pending",
+    },
+    approved_by: {
+      type: String,
+    },
+    approved_date: {
+      type: String,
+    },
+    approved_hours: {
+      type: String,
+    },
+  },
+  empleave_hr: {
+    status: {
+      type: String,
+      enum: ["Approved", "Rejected", "Pending"],
+      default: "Pending",
+    },
+    approved_date: {
+      type: String,
+    },
+    approved_hours: {
+      type: String,
+    },
   },
 });
 

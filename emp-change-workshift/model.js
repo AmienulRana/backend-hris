@@ -10,13 +10,20 @@ const outsideSchema = mongoose.Schema({
     ref: "Employmeent",
     required: [true, "Please Select one employment"],
   },
+  empchange_request: {
+    type: String,
+  },
   empchange_date_request: {
     type: String,
+  },
+  empchange_shift_before: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "shift",
   },
   empchange_to: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "shift",
-    required: [true, "Please fill in the end outside date"],
+    required: [true, "Please fill in the end shift change"],
   },
   empchange_replacement: {
     type: mongoose.Schema.Types.ObjectId,
